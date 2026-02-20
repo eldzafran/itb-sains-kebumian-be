@@ -1,3 +1,4 @@
+from django.utils.text import slugify
 from PIL import Image
 from rest_framework import serializers
 from django.utils import timezone
@@ -18,6 +19,18 @@ class ArticleCategorySerializer(serializers.ModelSerializer):
     def validate_name(self, value):
         if ArticleCategory.objects.filter(name=value).exists():
             raise serializers.ValidationError("Nama kategori tidak boleh duplikat.")
+        return value
+
+    def validate_slug(self, value):
+        value = slugify(value)
+
+        qs = ArticleCategory.objects.filter(slug=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise serializers.ValidationError("Slug sudah digunakan.")
+
         return value
 
 
@@ -41,6 +54,18 @@ class ArticleSerializer(serializers.ModelSerializer):
             attrs['published_at'] = timezone.now()
 
         return attrs
+    
+    def validate_slug(self, value):
+        value = slugify(value)
+
+        qs = Article.objects.filter(slug=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise serializers.ValidationError("Slug sudah digunakan.")
+
+        return value
     
     def validate_thumbnail(self, value):
         if value.size > 3 * 1024 * 1024:
