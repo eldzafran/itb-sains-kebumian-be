@@ -5,9 +5,6 @@ from django.dispatch import receiver
 from courses.models import Course
 
 
-# ==============================
-# LECTURER CATEGORY
-# ==============================
 class LecturerCategory(models.Model):
     name = models.CharField(max_length=255, unique=True)
 
@@ -18,9 +15,6 @@ class LecturerCategory(models.Model):
         return self.name
 
 
-# ==============================
-# LECTURER
-# ==============================
 class Lecturer(models.Model):
     slug = models.SlugField(unique=True, blank=True)
 
@@ -36,7 +30,7 @@ class Lecturer(models.Model):
         related_name="lecturers"
     )
 
-    # ✅ MANY TO MANY KE COURSE (THROUGH TABLE)
+    # RELASI MANY TO MANY KE COURSE
     courses = models.ManyToManyField(
         Course,
         through="LecturerCourse",
@@ -47,18 +41,6 @@ class Lecturer(models.Model):
     email = models.EmailField(blank=True, null=True)
     webpage = models.URLField(blank=True, null=True)
 
-    sinta_id = models.CharField(max_length=100, blank=True, null=True)
-    researcher_id = models.CharField(max_length=100, blank=True, null=True)
-    scopus_author_id = models.CharField(max_length=100, blank=True, null=True)
-    orcid_id = models.CharField(max_length=100, blank=True, null=True)
-
-    research_interest = models.TextField(max_length=500, blank=True, null=True)
-    education_history = models.TextField(max_length=500, blank=True, null=True)
-    publications = models.TextField(max_length=500, blank=True, null=True)
-    projects = models.TextField(max_length=500, blank=True, null=True)
-    community_service = models.TextField(max_length=500, blank=True, null=True)
-    awards = models.TextField(max_length=500, blank=True, null=True)
-
     is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -68,9 +50,6 @@ class Lecturer(models.Model):
         return self.name
 
 
-# ==============================
-# LECTURER COURSE (RELATION TABLE)
-# ==============================
 class LecturerCourse(models.Model):
     lecturer = models.ForeignKey(
         Lecturer,
@@ -90,9 +69,6 @@ class LecturerCourse(models.Model):
         return f"{self.lecturer.name} - {self.course.course_name}"
 
 
-# ==============================
-# AUTO SLUG
-# ==============================
 @receiver(pre_save, sender=Lecturer)
 def generate_slug(sender, instance, **kwargs):
     if not instance.slug:

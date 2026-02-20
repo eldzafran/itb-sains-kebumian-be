@@ -42,7 +42,11 @@ class Course(models.Model):
 
 
 class LearningMethod(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="methods")
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="methods"
+    )
 
     method = models.CharField(max_length=200)
     implementation = models.CharField(max_length=200)
@@ -52,7 +56,11 @@ class LearningMethod(models.Model):
 
 
 class Assessment(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="assessments")
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="assessments"
+    )
 
     component = models.CharField(max_length=200)
     rubric = models.TextField()
