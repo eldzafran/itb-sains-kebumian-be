@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.db import transaction
 from PIL import Image
+from courses.models import Course
 from .models import Lecturer, LecturerCategory, LecturerCourse
 
 
@@ -23,14 +24,28 @@ class LecturerSerializer(serializers.ModelSerializer):
         queryset=LecturerCategory.objects.all()
     )
 
+    # input list course id
     course_ids = serializers.ListField(
         child=serializers.IntegerField(),
         write_only=True
     )
 
+    # tampilkan course yang terhubung
+    courses = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Lecturer
         fields = "__all__"
+
+    def get_courses(self, obj):
+        return [
+            {
+                "id": lc.course.id,
+                "course_name": lc.course.course_name,
+                "course_code": lc.course.course_code,
+            }
+            for lc in obj.lecturer_courses.all()
+        ]
 
     # ======================
     # VALIDASI FOTO
@@ -62,7 +77,7 @@ class LecturerSerializer(serializers.ModelSerializer):
         return value
 
     # ======================
-    # CREATE WITH TRANSACTION
+    # CREATE
     # ======================
     def create(self, validated_data):
         categories = validated_data.pop("categories")
@@ -73,9 +88,10 @@ class LecturerSerializer(serializers.ModelSerializer):
             lecturer.categories.set(categories)
 
             for course_id in course_ids:
+                course = Course.objects.get(id=course_id)
                 LecturerCourse.objects.create(
                     lecturer=lecturer,
-                    course_id=course_id
+                    course=course
                 )
 
         return lecturer
@@ -97,10 +113,12 @@ class LecturerSerializer(serializers.ModelSerializer):
 
         if course_ids is not None:
             instance.lecturer_courses.all().delete()
+
             for course_id in course_ids:
+                course = Course.objects.get(id=course_id)
                 LecturerCourse.objects.create(
                     lecturer=instance,
-                    course_id=course_id
+                    course=course
                 )
 
         return instance

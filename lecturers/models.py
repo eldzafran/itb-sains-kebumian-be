@@ -1,8 +1,8 @@
 from django.db import models
 from django.utils.text import slugify
-from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from courses.models import Course
 
 
 # ==============================
@@ -36,6 +36,14 @@ class Lecturer(models.Model):
         related_name="lecturers"
     )
 
+    # ✅ MANY TO MANY KE COURSE (THROUGH TABLE)
+    courses = models.ManyToManyField(
+        Course,
+        through="LecturerCourse",
+        related_name="lecturers",
+        blank=True
+    )
+
     email = models.EmailField(blank=True, null=True)
     webpage = models.URLField(blank=True, null=True)
 
@@ -61,7 +69,7 @@ class Lecturer(models.Model):
 
 
 # ==============================
-# LECTURER COURSE (RELATION)
+# LECTURER COURSE (RELATION TABLE)
 # ==============================
 class LecturerCourse(models.Model):
     lecturer = models.ForeignKey(
@@ -70,12 +78,16 @@ class LecturerCourse(models.Model):
         related_name="lecturer_courses"
     )
 
-    course_id = models.IntegerField()
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="course_lecturers"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.lecturer.name} - {self.course_id}"
+        return f"{self.lecturer.name} - {self.course.course_name}"
 
 
 # ==============================
