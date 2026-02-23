@@ -30,7 +30,6 @@ class Lecturer(models.Model):
         related_name="lecturers"
     )
 
-    # RELASI MANY TO MANY KE COURSE
     courses = models.ManyToManyField(
         Course,
         through="LecturerCourse",
