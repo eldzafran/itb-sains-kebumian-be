@@ -32,15 +32,18 @@ export type ApiCourse = {
   created_at: string;
 };
 
+// ✅ Fetch all courses
 export async function fetchAdminCourses() {
-  return http<{ courses: ApiCourse[] }>("/api/admin/courses/");
+  return http<{ courses: ApiCourse[] }>("/api/courses/");
 }
 
+// ✅ Get single course
 export async function getAdminCourse(id: number): Promise<ApiCourse> {
   const res = await http<{ course: ApiCourse }>(`/api/courses/${id}/`);
   return res.course;
 }
 
+// ✅ Delete course
 export async function deleteCourse(id: number) {
   return http<{ message: string }>(`/api/courses/${id}/delete/`, { method: "DELETE" });
 }
@@ -109,6 +112,7 @@ function buildFormData(p: CoursePayload) {
   return fd;
 }
 
+// ✅ Create course
 export async function createCourse(payload: CoursePayload) {
   return http<{ message: string; course: ApiCourse }>("/api/courses/create/", {
     method: "POST",
@@ -116,6 +120,7 @@ export async function createCourse(payload: CoursePayload) {
   });
 }
 
+// ✅ Update course
 export async function updateCourse(id: number, payload: CoursePayload) {
   return http<{ message: string; course: ApiCourse }>(`/api/courses/${id}/update/`, {
     method: "POST",
