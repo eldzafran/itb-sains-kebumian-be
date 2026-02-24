@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.exceptions import AuthenticationFailed
 from django.conf import settings
 from django.utils import timezone
 
@@ -57,10 +58,7 @@ class RefreshAPIView(APIView):
         refresh_token = request.COOKIES.get("refresh_token")
 
         if not refresh_token:
-            return Response(
-                {"error": "Refresh token tidak ditemukan"},
-                status=400
-            )
+            raise AuthenticationFailed("Refresh token tidak ditemukan.")
 
         try:
             refresh = RefreshToken(refresh_token)
@@ -80,10 +78,7 @@ class RefreshAPIView(APIView):
             return response
 
         except Exception:
-            return Response(
-                {"error": "Refresh token tidak valid"},
-                status=400
-            )
+            raise AuthenticationFailed("Refresh token tidak valid.")
 
 class LogoutAPIView(APIView):
     permission_classes = [IsAuthenticated]
