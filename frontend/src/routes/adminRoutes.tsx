@@ -10,7 +10,7 @@ import AdminLoginPage from "../pages/admin/Login";
 import DashboardPage from "../pages/admin/Dashboard";
 import AdminArticlesPage from "../pages/admin/articles";
 import CreateArticlePage from "../pages/admin/articles/create";
-import EditArticlePage from "../pages/admin/articles/";
+import EditArticlePage from "../pages/admin/articles/edit";
 import AdminProfessorsPage from "../pages/admin/professors";
 import CreateProfessorPage from "../pages/admin/professors/create";
 import EditProfessorPage from "../pages/admin/professors/";
