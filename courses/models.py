@@ -1,25 +1,13 @@
 from django.db import models
 
-
-class Curriculum(models.Model):
-    semester = models.IntegerField()
-    year = models.CharField(max_length=10)
-
-    def __str__(self):
-        return f"{self.year} - Semester {self.semester}"
-
-
 class Course(models.Model):
-
     PROGRAM_CHOICES = (
-        ('S2', 'S2 Magister'),
-        ('S3', 'S3 Doktoral'),
+        ('S2 Magister', 'S2 Magister'),
+        ('S3 Doktoral', 'S3 Doktoral'),
     )
+    program = models.CharField(max_length=20, choices=PROGRAM_CHOICES)
 
-    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE)
-    program = models.CharField(max_length=2, choices=PROGRAM_CHOICES)
-
-    study_option = models.CharField(max_length=200)
+    study_option = models.CharField(max_length=200, blank=True, null=True)
     specialization = models.CharField(max_length=200, blank=True, null=True)
 
     course_code = models.CharField(max_length=20, unique=True)
