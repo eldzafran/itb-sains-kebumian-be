@@ -87,9 +87,12 @@ class ArticleSerializer(serializers.ModelSerializer):
         files_data = validated_data.pop('files', [])
         categories = validated_data.pop('categories')
 
-        user = self.context['request'].user
+        request = self.context['request']
+        user = request.user
+
+        # Jika created_by kosong → pakai username login
         if not validated_data.get('created_by'):
-            validated_data['created_by'] = user
+            validated_data['created_by'] = user.get_full_name() or user.username
 
         article = Article.objects.create(**validated_data)
         article.categories.set(categories)
@@ -102,6 +105,9 @@ class ArticleSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         files_data = validated_data.pop('files', None)
         categories = validated_data.pop('categories', None)
+
+        if not validated_data.get('created_by'):
+            validated_data['created_by'] = instance.created_by
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
