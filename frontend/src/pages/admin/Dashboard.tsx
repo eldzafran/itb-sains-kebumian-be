@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { fetchArticles } from "../../services/adminArticle";
 import type { ApiArticle } from "../../types/articles";
-import { fetchAdminCourses, type ApiCourse } from "../../services/adminCourse";
+import { getCourses } from "../../services/adminCourse";
+import type { Course } from "../../types/course";
 import { fetchProfessors, type ApiProfessor } from "../../services/adminProfessor";
 import { BookOpen, Users, FileText, Award } from "lucide-react";
 
 export default function DashboardPage() {
   const [articles, setArticles] = useState<ApiArticle[]>([]);
-  const [courses, setCourses] = useState<ApiCourse[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [professors, setProfessors] = useState<ApiProfessor[]>([]);
 
   useEffect(() => {
@@ -15,7 +16,7 @@ export default function DashboardPage() {
       const art = await fetchArticles();
       setArticles(art ?? []);
 
-      const mk = await fetchAdminCourses();
+      const mk = await getCourses();
       setCourses(mk.courses ?? []);
 
       const dos = await fetchProfessors();
@@ -49,13 +50,12 @@ export default function DashboardPage() {
             {latestCourses.map((c) => (
               <div key={c.id} className="rounded-xl bg-slate-50 p-4 flex justify-between">
                 <div>
-                  <div className="font-medium">{c.name}</div>
-                  <div className="text-sm text-slate-500">Kode: {c.code}</div>
+                  <div className="font-medium">{c.course_name}</div>
+                  <div className="text-sm text-slate-500">Kode: {c.course_code}</div>
                 </div>
 
                 <div className="text-right text-sm text-slate-500">
-                  <div>{c.credits ?? 3} SKS</div>
-                  <div>Sem. {c.term ?? "-"}</div>
+                  <div>{c.sks?? 3} SKS</div>
                 </div>
               </div>
             ))}
@@ -71,13 +71,12 @@ export default function DashboardPage() {
                 <FileText className="w-5 h-5 text-slate-400 mt-1" />
 
                 <div className="flex-1">
-                  <div className="font-medium line-clamp-1">{a.judul}</div>
+                  <div className="font-medium line-clamp-1">{a.title}</div>
 
                   <div className="flex items-center gap-2 text-sm text-slate-500">
                     <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-600">
-                      {a.category?.name ?? "Umum"}
+                      {a.categories?.[0]?.name ?? "Umum"}
                     </span>
-
                     <span>
                       {new Date(a.created_at).toLocaleDateString("id-ID")}
                     </span>
