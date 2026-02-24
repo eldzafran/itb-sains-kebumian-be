@@ -24,13 +24,11 @@ class LecturerSerializer(serializers.ModelSerializer):
         queryset=LecturerCategory.objects.all()
     )
 
-    # input list course id
     course_ids = serializers.ListField(
         child=serializers.IntegerField(),
         write_only=True
     )
 
-    # tampilkan course yang terhubung
     courses = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -47,9 +45,6 @@ class LecturerSerializer(serializers.ModelSerializer):
             for lc in obj.lecturer_courses.all()
         ]
 
-    # ======================
-    # VALIDASI FOTO
-    # ======================
     def validate_photo(self, value):
         if value.size > 2 * 1024 * 1024:
             raise serializers.ValidationError(
@@ -66,9 +61,6 @@ class LecturerSerializer(serializers.ModelSerializer):
 
         return value
 
-    # ======================
-    # VALIDASI NIP
-    # ======================
     def validate_nip(self, value):
         if Lecturer.objects.filter(nip=value).exists():
             raise serializers.ValidationError(
@@ -76,9 +68,6 @@ class LecturerSerializer(serializers.ModelSerializer):
             )
         return value
 
-    # ======================
-    # CREATE
-    # ======================
     def create(self, validated_data):
         categories = validated_data.pop("categories")
         course_ids = validated_data.pop("course_ids")
@@ -96,9 +85,6 @@ class LecturerSerializer(serializers.ModelSerializer):
 
         return lecturer
 
-    # ======================
-    # UPDATE
-    # ======================
     def update(self, instance, validated_data):
         categories = validated_data.pop("categories", None)
         course_ids = validated_data.pop("course_ids", None)

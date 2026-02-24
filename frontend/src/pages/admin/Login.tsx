@@ -3,18 +3,11 @@ import { useNavigate } from "react-router-dom";
 
 const BASE = (import.meta.env.VITE_API_BASE_URL as string) || "";
 
-type LoginResponse = {
-  access?: string;
-  refresh?: string;
-  detail?: string;
-  message?: string;
-  expires_in?: number; 
-};
-
 export default function AdminLoginPage() {
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState("");
+  // Menggunakan email sesuai dengan LoginSerializer di Django kamu
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
 
@@ -22,58 +15,38 @@ export default function AdminLoginPage() {
   const [err, setErr] = useState("");
 
   const canSubmit = useMemo(() => {
-    return !!username.trim() && !!password.trim() && !loading;
-  }, [username, password, loading]);
+    return !!email.trim() && !!password.trim() && !loading;
+  }, [email, password, loading]);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErr("");
+  e.preventDefault();
+  setErr("");
 
-    if (!BASE) {
-      setErr("VITE_API_BASE_URL belum di-set. Cek file .env kamu.");
-      return;
+  setLoading(true);
+
+  try {
+    const res = await fetch(`${BASE}/api/auth/login/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      credentials: "include", // WAJIB untuk cookie
+      body: JSON.stringify({
+        email: email.trim(), // ⚠ pastikan backend memang pakai email
+        password,
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data?.detail || "Email atau password salah");
     }
 
-    setLoading(true);
+    // 🔥 PENTING: Redirect setelah cookie tersimpan
+    navigate("/admin", { replace: true });
 
-    try {
-      const res = await fetch(`${BASE}/api/users/login/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          username: username.trim(),
-          password,
-        }),
-      });
-
-      let data: LoginResponse = {};
-      try {
-        data = (await res.json()) as LoginResponse;
-      } catch {
-        data = {};
-      }
-
-      if (!res.ok) {
-        const msg = data.detail || data.message || "Login gagal";
-        throw new Error(msg);
-      }
-
-      if (!data.access || !data.refresh) {
-        throw new Error("Token tidak ditemukan dari response login.");
-      }
-
-      localStorage.setItem("access_token", data.access);
-      localStorage.setItem("refresh_token", data.refresh);
-
-      if (typeof data.expires_in === "number") {
-        const exp = Date.now() + data.expires_in * 1000;
-        localStorage.setItem("access_expires_at", String(exp));
-      }
-
-      navigate("/admin", { replace: true });
     } catch (e: any) {
       setErr(e?.message ?? "Login gagal");
     } finally {
@@ -87,7 +60,6 @@ export default function AdminLoginPage() {
         {/* Header */}
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
-            {/* simple lock icon */}
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <path
                 d="M7 10V8a5 5 0 0 1 10 0v2"
@@ -124,17 +96,17 @@ export default function AdminLoginPage() {
             ) : null}
 
             <form onSubmit={handleLogin} className="space-y-4">
-              {/* Username */}
+              {/* Email (Ganti dari Username ke Email) */}
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-slate-800">
-                  Username
+                  Email Admin
                 </label>
                 <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Masukkan username"
-                  autoComplete="username"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Masukkan email"
+                  autoComplete="email"
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15"
                   required
                 />
@@ -161,7 +133,7 @@ export default function AdminLoginPage() {
                     type="button"
                     onClick={() => setShowPass((s) => !s)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
-                    aria-label={showPass ? "Sembunyikan password" : "Tampilkan password"}
+                    aria-label={showPass ? "Sembunyikan" : "Tampilkan"}
                   >
                     {showPass ? "Hide" : "Show"}
                   </button>

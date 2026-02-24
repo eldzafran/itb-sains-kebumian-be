@@ -23,14 +23,18 @@ class ArticleViewSet(viewsets.ModelViewSet):
     search_fields = ['title']
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            return [permissions.IsAuthenticated()]
+        if self.action == "list" and self.request.query_params.get("public") == "true":
+            return [permissions.AllowAny()]
+
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         qs = super().get_queryset()
 
-        if self.request.query_params.get("public"):
-            qs = qs.filter(status='Published', published_at__lte=timezone.now())
+        if self.request.query_params.get("public") == "true":
+            qs = qs.filter(
+                status='Published',
+                published_at__lte=timezone.now()
+            )
 
         return qs

@@ -3,15 +3,11 @@ import { Navigate } from "react-router-dom";
 
 const BASE = import.meta.env.VITE_API_BASE_URL as string;
 
-function getAccessToken() {
-  return localStorage.getItem("access_token");
-}
-function clearTokens() {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-}
-
-export default function ProtectedRoutes({ children }: { children: React.ReactNode }) {
+export default function ProtectedRoutes({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState(false);
 
@@ -19,44 +15,14 @@ export default function ProtectedRoutes({ children }: { children: React.ReactNod
     let alive = true;
 
     (async () => {
-      const token = getAccessToken();
-
-      if (!token) {
-        if (alive) {
-          setAllowed(false);
-          setLoading(false);
-        }
-        return;
-      }
-
       try {
-        const res = await fetch(`${BASE}/api/users/me/`, {
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        const res = await fetch(`${BASE}/api/auth/me/`, {
+          credentials: "include",
         });
 
-        const data = await res.json().catch(() => ({}));
-
-        if (res.status === 401 || res.status === 403) {
-          clearTokens();
-          if (alive) setAllowed(false);
-          return;
+        if (alive) {
+          setAllowed(res.ok); // 🔥 cukup cek 200
         }
-
-        if (!res.ok) {
-          if (alive) setAllowed(false);
-          return;
-        }
-
-        if (!data?.is_staff) {
-          clearTokens();
-          if (alive) setAllowed(false);
-          return;
-        }
-
-        if (alive) setAllowed(true);
       } catch {
         if (alive) setAllowed(false);
       } finally {
