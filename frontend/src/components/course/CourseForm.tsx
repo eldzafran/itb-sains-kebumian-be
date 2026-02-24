@@ -1,141 +1,248 @@
-import { useState,type FormEvent } from "react"
-import WordEditor from "../../components/WordEditor"
+import { useEffect, useState, type SubmitEvent } from "react";
+import WordEditor from "../../components/WordEditor";
 
-export default function CourseForm({onCancel,onSubmit}:{onCancel:()=>void;onSubmit:(data:any)=>void}) {
-  const [program,setProgram]=useState("")
-  const [opsiKeilmuan,setOpsiKeilmuan]=useState("")
-  const [spesialisasi,setSpesialisasi]=useState("")
-  const [kodeMK,setKodeMK]=useState("")
-  const [namaMK,setNamaMK]=useState("")
-  const [sks,setSks]=useState(3)
-  const [deskripsi,setDeskripsi]=useState("")
-  const [cpps,setCpps]=useState("")
-  const [cpmk,setCpmk]=useState("")
-  const [rps,setRps]=useState("")
-  const [etika,setEtika]=useState("")
-  const [methods,setMethods]=useState([{metode:"",implementasi:"",cpmk:"",cpl:""}])
-  const [assessments,setAssessments]=useState([{komponen:"",rubrik:"",bobot:0,cpl:""}])
+type MethodType = { method: string; implementation: string; cpmk: string; cpl: string };
+type AssessmentType = { component: string; rubric: string; weight: number; cpl: string };
 
-  const field="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-  const label="block text-sm font-semibold text-slate-700 mb-1"
+interface CourseFormProps {
+  onCancel: () => void;
+  onSubmit: (data: any) => void;
+  initialData?: any;
+}
 
-  function addMethod(){setMethods([...methods,{metode:"",implementasi:"",cpmk:"",cpl:""}])}
-  function removeMethod(i:number){setMethods(methods.filter((_,idx)=>idx!==i))}
-  function addAssessment(){
-    if(assessments.length >= 10) return
-    setAssessments([...assessments,{komponen:"",rubrik:"",bobot:0,cpl:""}])
+export default function CourseForm({ onCancel, onSubmit, initialData }: CourseFormProps) {
+  const [program, setProgram] = useState("");
+  const [study_option, setStudyOption] = useState("");
+  const [specialization, setSpecialization] = useState("");
+  const [course_code, setCourseCode] = useState("");
+  const [course_name, setCourseName] = useState("");
+  const [sks, setSks] = useState(3);
+  const [description, setDescription] = useState("");
+  const [cpps, setCpps] = useState("");
+  const [cpmk, setCpmk] = useState("");
+  const [weekly_plan, setWeeklyPlan] = useState("");
+  const [errors, setErrors] = useState<{ study_option?: string; specialization?: string; }>({});
+  const [ethics_note, setEthicsNote] = useState("");
+
+  const [methods, setMethods] = useState<MethodType[]>([{ method: "", implementation: "", cpmk: "", cpl: "" }]);
+  const [assessments, setAssessments] = useState<AssessmentType[]>([{ component: "", rubric: "", weight: 0, cpl: "" }]);
+
+  const field = "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm";
+  const label = "block text-sm font-semibold text-slate-700 mb-1";
+
+  function addMethod() { setMethods([...methods, { method: "", implementation: "", cpmk: "", cpl: "" }]); }
+  function removeMethod(i: number) { setMethods(methods.filter((_, idx) => idx !== i)); }
+  function addAssessment() { if (assessments.length >= 10) return; setAssessments([...assessments, { component: "", rubric: "", weight: 0, cpl: "" }]); }
+  function removeAssessment(i: number) { setAssessments(assessments.filter((_, idx) => idx !== i)); }
+
+    useEffect(() => {
+    if (!initialData) return;
+    setProgram(initialData?.program ?? "");
+    setStudyOption(initialData?.study_option ?? "");
+    setSpecialization(initialData?.specialization ?? "");
+    setCourseCode(initialData?.course_code ?? "");
+    setCourseName(initialData?.course_name ?? "");
+    setSks(initialData?.sks ?? 3);
+    setDescription(initialData?.description ?? "");
+    setCpps(initialData?.cpps ?? "");
+    setCpmk(initialData?.cpmk ?? "");
+    setWeeklyPlan(initialData?.weekly_plan ?? "");
+    setEthicsNote(initialData?.ethics_note ?? "");
+
+    setMethods(
+      Array.isArray(initialData?.methods) && initialData.methods.length > 0
+        ? initialData.methods
+        : [{ method: "", implementation: "", cpmk: "", cpl: "" }]
+    );
+
+    setAssessments(
+      Array.isArray(initialData?.assessments) && initialData.assessments.length > 0
+        ? initialData.assessments
+        : [{ component: "", rubric: "", weight: 0, cpl: "" }]
+    );
+}, [initialData]);
+
+useEffect(() => {
+  if (program === "S3 Doktoral") {
+    setStudyOption("sains_kebumian"); 
+  } else if (program === "S2 Magister") {
+    setStudyOption(""); 
   }
-  function removeAssessment(i:number){setAssessments(assessments.filter((_,idx)=>idx!==i))}
+}, [program]);
 
-  function submit(e:FormEvent<HTMLFormElement>){
-    e.preventDefault()
-    const totalBobot=assessments.reduce((sum,a)=>sum+Number(a.bobot),0)
-    if(totalBobot>100){alert("Total bobot asesmen tidak boleh melebihi 100%");return}
-    onSubmit({informasi_dasar:{program,opsiKeilmuan,spesialisasi,kodeMK,namaMK,sks},deskripsi,capaian_pembelajaran:{cpps,cpmk,rps,etika},learning_methods:methods,assessments})
+function submit(e: SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const newErrors: { study_option?: string; specialization?: string } = {};
+
+   if (program === "S2 Magister" && !study_option) {
+    newErrors.study_option = "Opsi Keilmuan wajib dipilih.";
   }
 
-  return(
-    <div className="space-y-10 bg-transparent shadow-none rounded-none">
-      <h2 className="text-xl font-bold">Create Mata Kuliah</h2>
-      <form onSubmit={submit} className="space-y-10">
-        <section className="bg-white rounded-xl shadow-xl p-6 space-y-4">
-          <h3 className="text-md font-semibold border-b pb-2">Informasi Dasar Mata Kuliah</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div><label className={label}>Program</label><select className={field} value={program} onChange={e=>setProgram(e.target.value)}><option value="">— Pilih Program —</option><option value="S2">S2 Magister</option><option value="S3">S3 Doktoral</option></select></div>
-            {program==="S2"&&<div><label className={label}>Opsi Keilmuan</label><select className={field} value={opsiKeilmuan} onChange={e=>setOpsiKeilmuan(e.target.value)}><option value="">— Pilih Opsi —</option><option value="sains_atmosfer">Sains Atmosfer</option><option value="oseanografi">Oseanografi</option><option value="bencana">Interaksi Sistem Bumi</option></select></div>}
-            {program==="S3"&&<div><label className={label}>Opsi Keilmuan</label><select className={field} value={opsiKeilmuan} onChange={e=>setOpsiKeilmuan(e.target.value)}><option value="sains_kebumian">Sains Kebumian</option></select></div>}
-            {program==="S2"&&<div><label className={label}>Spesialisasi</label><select className={field} value={spesialisasi} onChange={e=>setSpesialisasi(e.target.value)}><option value="">— Pilih Spesialisasi —</option><option value="iklim">Perubahan Iklim & Transisi Energi</option><option value="bencana">Mitigasi Bencana Kebumian</option></select></div>}
-            <div><label className={label}>Kode MK</label><input className={field} value={kodeMK} maxLength={20} onChange={e=>setKodeMK(e.target.value)}/><p className="text-xs text-gray-400 text-right">Maksimal 20 karakter</p></div>
-            <div><label className={label}>Nama MK</label><input className={field} value={namaMK} maxLength={100} onChange={e=>setNamaMK(e.target.value)}/><p className="text-xs text-gray-400 text-right">Maksimal 100 karakter</p></div>
-            <div><label className={label}>SKS</label><input type="number" className={field} value={sks} onChange={e=>setSks(Number(e.target.value))}/></div>
+  if (program === "S2 Magister" && !specialization) {
+    newErrors.specialization = "Spesialisasi wajib dipilih.";
+  }
+
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    alert("Harap lengkapi semua pilihan untuk program S2.");
+    return;
+  }
+
+    const totalWeight = assessments.reduce((sum: number, a: AssessmentType) => sum + Number(a.weight), 0);
+    if (totalWeight > 100) { alert("Total bobot asesmen tidak boleh melebihi 100%"); return; }
+
+    const payload = {
+      program,
+      study_option,
+      specialization,
+      course_code,
+      course_name,
+      sks,
+      description,
+      cpps,
+      cpmk,
+      weekly_plan,
+      ethics_note,
+      methods,
+      assessments
+    };
+
+    onSubmit(payload);
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-6">
+      <h2 className="text-xl font-bold">Create Course</h2>
+
+      <section className="bg-white p-6 rounded-xl shadow space-y-4">
+        <h3 className="font-semibold border-b pb-2">Informasi Dasar</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className={label}>Program</label>
+            <select className={field} value={program} onChange={e => setProgram(e.target.value)}>
+              <option value="">— Pilih Program —</option>
+              <option value="S2 Magister">S2 Magister</option>
+              <option value="S3 Doktoral">S3 Doktoral</option>
+            </select>
           </div>
-        </section>
-
-        <section className="bg-white rounded-xl shadow-xl p-6 space-y-4">
-          <h3 className="text-md font-semibold border-b pb-2">Deskripsi Singkat</h3>
-          <WordEditor label="Deskripsi" value={deskripsi} onChange={setDeskripsi}/>
-          <p className="text-xs text-gray-400 text-right">Maksimal 200 karakter</p>
-        </section>
-        <section className="bg-white rounded-xl shadow-xl p-6 space-y-4">
-          <h3 className="text-md font-semibold border-b pb-2">Capaian Pembelajaran</h3>
-          <WordEditor label="CPPS" value={cpps} onChange={setCpps}/><p className="text-xs text-gray-400 text-right">Maksimal 500 karakter</p>
-          <WordEditor label="CPMK" value={cpmk} onChange={setCpmk}/><p className="text-xs text-gray-400 text-right">Maksimal 500 karakter</p>
-          <WordEditor label="Rencana Pembelajaran Mingguan" value={rps} onChange={setRps}/><p className="text-xs text-gray-400 text-right">Maksimal 500 karakter</p>
-          <WordEditor label="Etika Akademik" value={etika} onChange={setEtika}/><p className="text-xs text-gray-400 text-right">Maksimal 200 karakter</p>
-        </section>
-
-        <section className="bg-white rounded-xl shadow p-6 space-y-4">
-          <h3 className="text-md font-semibold border-b pb-2">Pemetaan Metode Pembelajaran</h3>
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-slate-100 text-left">
-                <th className="p-2">Metode</th>
-                <th className="p-2">Implementasi</th>
-                <th className="p-2">CPMK</th>
-                <th className="p-2">CPL</th>
-                <th className="p-2">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {methods.map((m,i)=>(
-                <tr key={i} className="border-t">
-                  <td className="p-2"><input className={field} value={m.metode} onChange={e=>{const arr=[...methods];arr[i].metode=e.target.value;setMethods(arr)}}/></td>
-                  <td className="p-2"><input className={field} value={m.implementasi} maxLength={200} onChange={e=>{const arr=[...methods];arr[i].implementasi=e.target.value;setMethods(arr)}}/></td>
-                  <td className="p-2"><input className={field} value={m.cpmk} onChange={e=>{const arr=[...methods];arr[i].cpmk=e.target.value;setMethods(arr)}}/></td>
-                  <td className="p-2"><input className={field} value={m.cpl} onChange={e=>{const arr=[...methods];arr[i].cpl=e.target.value;setMethods(arr)}}/></td>
-                  <td className="p-2"><button type="button" onClick={()=>removeMethod(i)} className="text-red-600">Hapus</button></td>
-                </tr>
-              ))}
-              
-            </tbody>
-              <p className="text-xs text-gray-400">Implementasi maksimal 200 karakter</p>
-          </table>
-          <button type="button" onClick={addMethod} disabled={methods.length >= 10} className={`px-3 py-1 rounded ${methods.length >= 10 ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"}`}>+ Tambah Metode</button>
-          {methods.length >= 10 && (
-            <span className="text-sm text-red-600">
-              Maksimal 10 metode sudah tercapai
-            </span>
+          {program === "S2 Magister" && (
+            <div>
+              <label className={label}>Opsi Keilmuan</label>
+              <select className={field} value={study_option} onChange={e => setStudyOption(e.target.value)}>
+                <option value="">— Pilih Opsi —</option>
+                <option value="Sains Atmosfer">Sains Atmosfer</option>
+                <option value="Oseanografi">Oseanografi</option>
+                <option value="Interaksi Sistem Bumi">Interaksi Sistem Bumi</option>
+              </select>
+            </div>
           )}
-        </section>
+          {program === "S3 Doktoral" && (
+            <div>
+              <label className={label}>Opsi Keilmuan</label>
+              <select 
+                className={field} 
+                value={study_option}
+                onChange={e => setStudyOption(e.target.value)}
+              >
+                <option value="Sains Kebumian">Sains Kebumian</option>
+              </select>
+              <p className="text-xs text-blue-600 mt-1">* Otomatis terpilih untuk program S3</p>
+            </div>
+          )}
+          {program === "S2 Magister" && (
+            <div>
+              <label className={label}>Spesialisasi</label>
+              <select className={field} value={specialization} onChange={e => setSpecialization(e.target.value)}>
+                <option value="">— Pilih Spesialisasi —</option>
+                <option value="Perubahan Iklim & Transisi Energi">Perubahan Iklim & Transisi Energi</option>
+                <option value="Mitigasi Bencana Kebumian">Mitigasi Bencana Kebumian</option>
+              </select>
+            </div>
+          )}
 
-       <section className="bg-white rounded-xl shadow p-6 space-y-4">
-          <h3 className="text-md font-semibold border-b pb-2">Strategi & Instrumen Asesmen</h3>
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-slate-100 text-left">
-                <th className="p-2">Komponen</th>
-                <th className="p-2">Rubrik</th>
-                <th className="p-2">Bobot %</th>
-                <th className="p-2">CPL</th>
-                <th className="p-2">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assessments.map((a,i)=>(
-                <tr key={i} className="border-t">
-                  <td className="p-2"><input className={field} value={a.komponen} onChange={e=>{const arr=[...assessments];arr[i].komponen=e.target.value;setAssessments(arr)}}/></td>
-                  <td className="p-2"><input className={field} value={a.rubrik} onChange={e=>{const arr=[...assessments];arr[i].rubrik=e.target.value;setAssessments(arr)}}/></td>
-                  <td className="p-2"><input type="number" className={field} value={a.bobot} onChange={e=>{const arr=[...assessments];arr[i].bobot=Number(e.target.value);setAssessments(arr)}}/></td>
-                  <td className="p-2"><input className={field} value={a.cpl} onChange={e=>{const arr=[...assessments];arr[i].cpl=e.target.value;setAssessments(arr)}}/></td>
-                  <td className="p-2"><button type="button" onClick={()=>removeAssessment(i)} className="text-red-600">Hapus</button></td>
-                </tr>
-              ))}
-            </tbody>
-            <p className="text-xs text-gray-400">Total Bobot ≤ 100%</p>
-          </table>
-          <button type="button" onClick={addAssessment} disabled={assessments.length >= 100} className={`px-3 py-1 rounded ${assessments.length >= 10 ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"}`}>+ Tambah Asesmen</button>
-            {assessments.length >= 10 && (
-              <span className="text-sm text-red-600">
-                Maksimal 10 asesmen sudah tercapai
-              </span>
-            )}
-        </section>
-
-        <div className="flex gap-2">
-          <button type="button" onClick={onCancel} className="border px-4 py-2 rounded-xl">Cancel</button>
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-xl">Save</button>
+          <div>
+            <label className={label}>Kode MK</label>
+            <input className={field} value={course_code} onChange={e => setCourseCode(e.target.value)} maxLength={20} />
+          </div>
+          <div>
+            <label className={label}>Nama MK</label>
+            <input className={field} value={course_name} onChange={e => setCourseName(e.target.value)} maxLength={200} />
+          </div>
+          <div>
+            <label className={label}>SKS</label>
+            <input type="number" className={field} value={sks} onChange={e => setSks(Number(e.target.value))} min={1} />
+          </div>
         </div>
-      </form>
-    </div>
-  )
+      </section>
+
+      {/* Deskripsi */}
+      <section className="bg-white p-6 rounded-xl shadow space-y-4">
+        <h3 className="font-semibold border-b pb-2">Deskripsi Singkat</h3>
+        <WordEditor label="Deskripsi" value={description} onChange={setDescription} />
+      </section>
+
+      {/* Capaian */}
+      <section className="bg-white p-6 rounded-xl shadow space-y-4">
+        <h3 className="font-semibold border-b pb-2">Capaian Pembelajaran</h3>
+        <WordEditor label="CPPS" value={cpps} onChange={setCpps} />
+        <WordEditor label="CPMK" value={cpmk} onChange={setCpmk} />
+        <WordEditor label="Rencana Mingguan" value={weekly_plan} onChange={setWeeklyPlan} />
+        <WordEditor label="Etika Akademik" value={ethics_note} onChange={setEthicsNote} />
+      </section>
+
+      {/* Methods */}
+      <section className="bg-white p-6 rounded-xl shadow space-y-4">
+        <h3 className="font-semibold border-b pb-2">Metode Pembelajaran</h3>
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="bg-slate-100 text-left">
+              <th>Metode</th><th>Implementasi</th><th>CPMK</th><th>CPL</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {methods.map((m,i)=>(
+              <tr key={i}>
+                <td><input className={field} value={m.method} onChange={e=>{const arr=[...methods];arr[i].method=e.target.value;setMethods(arr)}}/></td>
+                <td><input className={field} value={m.implementation} onChange={e=>{const arr=[...methods];arr[i].implementation=e.target.value;setMethods(arr)}}/></td>
+                <td><input className={field} value={m.cpmk} onChange={e=>{const arr=[...methods];arr[i].cpmk=e.target.value;setMethods(arr)}}/></td>
+                <td><input className={field} value={m.cpl} onChange={e=>{const arr=[...methods];arr[i].cpl=e.target.value;setMethods(arr)}}/></td>
+                <td><button type="button" onClick={()=>removeMethod(i)} className="text-red-600">Hapus</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button type="button" onClick={addMethod} className="bg-blue-600 text-white px-3 py-1 rounded">+ Tambah Metode</button>
+      </section>
+
+      {/* Assessments */}
+      <section className="bg-white p-6 rounded-xl shadow space-y-4">
+        <h3 className="font-semibold border-b pb-2">Asesmen</h3>
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="bg-slate-100 text-left">
+              <th>Komponen</th><th>Rubrik</th><th>Bobot</th><th>CPL</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assessments.map((a,i)=>(
+              <tr key={i}>
+                <td><input className={field} value={a.component} onChange={e=>{const arr=[...assessments];arr[i].component=e.target.value;setAssessments(arr)}}/></td>
+                <td><input className={field} value={a.rubric} onChange={e=>{const arr=[...assessments];arr[i].rubric=e.target.value;setAssessments(arr)}}/></td>
+                <td><input type="number" className={field} value={a.weight} onChange={e=>{const arr=[...assessments];arr[i].weight=Number(e.target.value);setAssessments(arr)}}/></td>
+                <td><input className={field} value={a.cpl} onChange={e=>{const arr=[...assessments];arr[i].cpl=e.target.value;setAssessments(arr)}}/></td>
+                <td><button type="button" onClick={()=>removeAssessment(i)} className="text-red-600">Hapus</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button type="button" onClick={addAssessment} className="bg-blue-600 text-white px-3 py-1 rounded">+ Tambah Asesmen</button>
+      </section>
+
+      <div className="flex gap-2">
+        <button type="button" onClick={onCancel} className="border px-4 py-2 rounded-xl">Cancel</button>
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-xl">Save</button>
+      </div>
+    </form>
+  );
 }

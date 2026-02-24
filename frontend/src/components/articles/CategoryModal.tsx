@@ -7,12 +7,9 @@ import {
   deleteCategory,
 } from "../../services/adminArticle";
 import { slugify } from "../../utils/slugify";
+import type { Props } from "../../types/articles";
 
-interface Props {
-  onClose: () => void;
-}
-
-export default function CategoryModal({ onClose }: Props) {
+export default function CategoryModal({ onCancel }: Props) {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [search, setSearch] = useState("");
@@ -29,8 +26,6 @@ export default function CategoryModal({ onClose }: Props) {
     load();
   }, []);
 
-  /* ================= ADD ================= */
-
   async function handleAdd() {
     if (!newCategory.trim()) return;
 
@@ -44,7 +39,6 @@ export default function CategoryModal({ onClose }: Props) {
     setLoading(false);
   }
 
-  /* ================= UPDATE ================= */
 
   async function handleUpdate(id: number) {
     if (!editName.trim()) return;
@@ -59,7 +53,6 @@ export default function CategoryModal({ onClose }: Props) {
     setLoading(false);
   }
 
-  /* ================= DELETE ================= */
 
   async function handleDelete(id: number) {
     if (!confirm("Delete category?")) return;
@@ -74,8 +67,6 @@ export default function CategoryModal({ onClose }: Props) {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[80vh] flex flex-col">
         <h2 className="text-lg font-bold mb-4">Manage Categories</h2>
-
-        {/* Search */}
         <input
           type="text"
           placeholder="Search categories..."
@@ -84,7 +75,6 @@ export default function CategoryModal({ onClose }: Props) {
           className="border rounded-lg px-3 py-2 mb-4"
         />
 
-        {/* Add */}
         <div className="flex gap-2 mb-4">
           <input
             type="text"
@@ -102,7 +92,6 @@ export default function CategoryModal({ onClose }: Props) {
           </button>
         </div>
 
-        {/* List */}
         <div className="flex-1 overflow-y-auto space-y-2 border rounded-lg p-3">
           {categories
             .filter((c) =>
@@ -165,7 +154,7 @@ export default function CategoryModal({ onClose }: Props) {
 
         <div className="mt-4 text-right">
           <button
-            onClick={onClose}
+            onClick={onCancel}
             className="px-4 py-2 rounded-lg border bg-gray-100 hover:bg-gray-200"
           >
             Close

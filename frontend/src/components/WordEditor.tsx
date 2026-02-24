@@ -14,15 +14,13 @@ export default function WordEditor({ label, value, onChange }: Props) {
 
   return (
     <div className="border rounded-2xl shadow-sm bg-white">
-      {/* Header Label */}
+
       <div className="px-4 py-3 border-b bg-gray-50 font-semibold">
         {label}
       </div>
 
-      {/* Toolbar Container (unik per instance) */}
       <div ref={toolbarRef} className="border-b px-4 py-2 bg-white" />
 
-      {/* Editor Area */}
       <div className="p-4 min-h-[300px]">
         <CKEditor
           editor={DecoupledEditor as any}
@@ -31,7 +29,7 @@ export default function WordEditor({ label, value, onChange }: Props) {
             editorRef.current = editor;
 
             if (toolbarRef.current) {
-              // Bersihkan container agar toolbar tidak double
+
               toolbarRef.current.innerHTML = "";
               toolbarRef.current.appendChild(editor.ui.view.toolbar.element);
             }
