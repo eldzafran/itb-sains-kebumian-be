@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getCourses, deleteCourse } from "../../../services/adminCourse";
 import type { Course } from "../../../types/course";
 import { SquarePen, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import ConfirmModal from "../../../components/ConfirmModal"; // Import modal kustom Anda
 
 export default function AdminCoursesPage() {
   const [loading, setLoading] = useState(true);
@@ -14,7 +15,11 @@ export default function AdminCoursesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-    async function load(page: number = 1) {
+  // --- STATE UNTUK KONFIRMASI HAPUS ---
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<{ id: number | string; name: string } | null>(null);
+
+  async function load(page: number = 1) {
     setErr("");
     setLoading(true);
     try {
@@ -37,14 +42,25 @@ export default function AdminCoursesPage() {
     load(1);
   }, [search]);
 
-  async function onDelete(id: number | string) {
-    const ok = window.confirm("Hapus data mata kuliah ini?");
-    if (!ok) return;
+  // Fungsi untuk membuka modal konfirmasi
+  function triggerDelete(id: number | string, name: string) {
+    setSelectedCourse({ id, name });
+    setIsDeleteModalOpen(true);
+  }
+
+  // Fungsi eksekusi hapus setelah konfirmasi "Ya"
+  async function handleConfirmDelete() {
+    if (!selectedCourse) return;
+    
+    setLoading(true);
     try {
-      await deleteCourse(Number(id));
+      await deleteCourse(Number(selectedCourse.id));
+      setIsDeleteModalOpen(false);
+      setSelectedCourse(null);
       load(currentPage);
     } catch (e: any) {
       alert(e?.message ?? "Gagal hapus");
+      setLoading(false);
     }
   }
 
@@ -73,8 +89,9 @@ export default function AdminCoursesPage() {
         />
       </div>
 
-      {/* Table / List View */}
-      {loading ? (
+      {err && <div className="text-red-500 mb-4 text-sm">{err}</div>}
+
+      {loading && items.length === 0 ? (
         <div className="flex items-center justify-center p-10 text-black/70 italic animate-pulse">
           Menghubungkan ke server...
         </div>
@@ -84,7 +101,6 @@ export default function AdminCoursesPage() {
         </div>
       ) : (
         <>
-          {/* Desktop View (Iterasi menggunakan 'items' langsung) */}
           <div className="hidden md:block rounded-xl border bg-white overflow-hidden shadow-sm">
              <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b">
@@ -111,7 +127,10 @@ export default function AdminCoursesPage() {
                         <Link to={`/admin/course/edit/${m.id}`} className="inline-flex items-center justify-center w-9 h-9 text-blue-600 hover:bg-blue-50 rounded-lg">
                           <SquarePen className="w-4 h-4" />
                         </Link>
-                        <button onClick={() => onDelete(m.id!)} className="inline-flex items-center justify-center w-9 h-9 text-red-600 hover:bg-red-50 rounded-lg">
+                        <button 
+                          onClick={() => triggerDelete(m.id!, m.course_name)} 
+                          className="inline-flex items-center justify-center w-9 h-9 text-red-600 hover:bg-red-50 rounded-lg"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
@@ -121,7 +140,6 @@ export default function AdminCoursesPage() {
              </table>
           </div>
 
-          {/* Pagination Controls */}
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-slate-500">
               Menampilkan halaman <span className="font-semibold text-slate-900">{currentPage}</span> dari <span className="font-semibold text-slate-900">{totalPages}</span>
@@ -135,7 +153,6 @@ export default function AdminCoursesPage() {
                 <ChevronLeft className="w-5 h-5" />
               </button>
               
-              {/* Page Numbers (Opsional) */}
               <div className="flex gap-1">
                 {[...Array(totalPages)].map((_, i) => (
                   <button
@@ -159,6 +176,18 @@ export default function AdminCoursesPage() {
           </div>
         </>
       )}
+
+      {/* --- MODAL KONFIRMASI HAPUS --- */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        title="Hapus Mata Kuliah"
+        message={`Apakah Anda yakin ingin menghapus mata kuliah "${selectedCourse?.name}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+        onCancel={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedCourse(null);
+        }}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

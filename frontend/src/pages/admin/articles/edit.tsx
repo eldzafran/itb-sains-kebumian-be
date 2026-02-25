@@ -49,7 +49,6 @@ export default function EditArticlePage() {
           status: a.status, // "Draft" | "Published"
           thumbnail: a.thumbnail, // Path dari server
           categories: categoryIds,
-          // Pastikan dokumen lama ter-map jika ada
           files: a.files || [],
         });
       } catch (error: any) {
