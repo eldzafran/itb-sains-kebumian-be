@@ -78,6 +78,7 @@ export default function EditArticlePage() {
         categories: values.categories, 
         thumbnailFile: values.thumbnailFile,
         files: values.files,
+        created_by: values.created_by,
       });
 
       toast({

@@ -39,15 +39,17 @@ export type ApiProfessor = {
   created_at: string;
 };
 
+// ✅ Fetch all professors
 export async function fetchProfessors(): Promise<{ dosens: ApiProfessor[] }> {
-  return http<{ dosens: ApiProfessor[] }>("/api/admin/dosen/");
+  return http<{ dosens: ApiProfessor[] }>("/api/lecturers/");
 }
 
+// ✅ Get single professor
 export async function getAdminProfessor(id: number): Promise<ApiProfessor> {
-  return http<ApiProfessor>(`/api/dosen/${id}/`);
+  return http<ApiProfessor>(`/api/lecturers/${id}/`);
 }
 
-
+// ✅ Create professor
 export async function createAdminProfessor(data: {
   nama_dosen: string;
   nidn: string;
@@ -108,44 +110,45 @@ export async function createAdminProfessor(data: {
     data.foto.forEach((f) => formData.append("foto_dosen", f));
   }
 
-  return http<any>("/api/dosen/create/", {
+  return http<any>("/api/lecturers/create/", {
     method: "POST",
     body: formData,
   });
 }
 
-// ✅ Update dosen
+// ✅ Update professor
 export async function updateAdminProfessor(
   id: number,
   data: {
-      nama_dosen: string;
-  nidn: string;
-  email?: string;
-  fakultas: string;
-  program_studi: string;
-  penelitian: string;
+    nama_dosen: string;
+    nidn: string;
+    email?: string;
+    fakultas: string;
+    program_studi: string;
+    penelitian: string;
 
-  sinta_id?: string;
-  researcher_id?: string;
-  scopus_author_id?: string;
-  orchid_id?: string;
-  webpage?: string;
+    sinta_id?: string;
+    researcher_id?: string;
+    scopus_author_id?: string;
+    orchid_id?: string;
+    webpage?: string;
 
-  pendidikan_s1?: string;
-  pendidikan_s2?: string;
-  pendidikan_s3?: string;
+    pendidikan_s1?: string;
+    pendidikan_s2?: string;
+    pendidikan_s3?: string;
 
-  pekerjaan?: string;
+    pekerjaan?: string;
 
-  research_interest?: string;
-  mata_kuliah_diampu?: string;
-  publikasi?: string;
-  project?: string;
-  pengabdian_masyarakat?: string;
-  award?: string;
+    research_interest?: string;
+    mata_kuliah_diampu?: string;
+    publikasi?: string;
+    project?: string;
+    pengabdian_masyarakat?: string;
+    award?: string;
 
-  foto?: File[];
-}): Promise<any> {
+    foto?: File[];
+  }
+): Promise<any> {
   const formData = new FormData();
   formData.append("nama_dosen", data.nama_dosen);
   formData.append("nidn", data.nidn);
@@ -177,12 +180,13 @@ export async function updateAdminProfessor(
     data.foto.forEach((f) => formData.append("foto_dosen", f));
   }
 
-  return http<any>(`/api/dosen/update/${id}/`, {
-    method: "POST", // ✅ backend pakai POST
+  return http<any>(`/api/lecturers/update/${id}/`, {
+    method: "POST", // sesuai backend
     body: formData,
   });
 }
 
+// ✅ Delete professor
 export async function deleteAdminProfessor(id: number) {
-  return http(`/api/dosen/delete/${id}/`, { method: "DELETE" });
+  return http(`/api/lecturers/delete/${id}/`, { method: "DELETE" });
 }

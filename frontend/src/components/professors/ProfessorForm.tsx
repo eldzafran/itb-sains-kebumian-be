@@ -88,164 +88,186 @@ export default function ProfessorForm({ initial, onCancel, onSubmit }: Props) {
     onSubmit(form);
   }
 
-  return (
-    <form onSubmit={submit} className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="text-xs text-slate-500">Form</div>
-          <h2 className="text-lg font-semibold text-slate-900">
-            {initial ? "Edit Professor" : "Create Professor"}
-          </h2>
-        </div>
-        
+return (
+  <form
+    onSubmit={submit}
+    className="rounded-2xl bg-white p-8 shadow-sm border border-slate-200 space-y-8"
+  >
+    {/* TITLE */}
+    <div>
+      <h2 className="text-xl font-semibold text-slate-900">
+        {initial ? "Edit Dosen" : "Tambah Dosen Baru"}
+      </h2>
+    </div>
+
+    {/* FOTO PROFIL */}
+    <div>
+      <label className="block text-sm font-semibold text-slate-700 mb-2">
+        Foto Profil
+      </label>
+
+      <div className="flex flex-col gap-3">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => handleFile(e.target.files?.[0])}
+          className="block w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white"
+        />
+
+        <p className="text-xs text-slate-500">
+          Format: JPG, PNG. Maksimal 5MB. Rekomendasi rasio 1:1 (600x600px)
+        </p>
       </div>
 
-      {/* Fields */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* Identitas */}
+      {form.fotoUrl && (
+        <div className="mt-4 w-40 aspect-square rounded-xl overflow-hidden border">
+          <img
+            src={form.fotoUrl}
+            alt="Preview"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+    </div>
+
+    {/* GRID FORM */}
+    <div className="grid gap-6 md:grid-cols-2">
+      <div className="md:col-span-2">
+        <label className="block text-sm font-semibold text-slate-700 mb-2">
+          Nama Lengkap
+        </label>
+        <input
+          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
+          value={form.nama_dosen}
+          onChange={(e) => handleChange("nama_dosen", e.target.value)}
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-2">
+          NIP / NIDN
+        </label>
+        <input
+          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
+          value={form.nidn}
+          onChange={(e) => handleChange("nidn", e.target.value)}
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-2">
+          Jabatan Fungsional
+        </label>
+        <input
+          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
+          placeholder="Contoh: Profesor, Lektor Kepala"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-2">
+          Email
+        </label>
+        <input
+          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
+          value={form.email}
+          onChange={(e) => handleChange("email", e.target.value)}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-2">
+          Webpage
+        </label>
+        <input
+          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
+          placeholder="https://example.com/profile"
+          value={form.webpage}
+          onChange={(e) => handleChange("webpage", e.target.value)}
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="block text-sm font-semibold text-slate-700 mb-2">
+          Bidang Penelitian
+        </label>
+        <textarea
+          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm h-24"
+          placeholder="Machine Learning, Artificial Intelligence..."
+          value={form.research_interest}
+          onChange={(e) =>
+            handleChange("research_interest", e.target.value)
+          }
+        />
+      </div>
+    </div>
+
+    {/* DIVIDER */}
+    <hr className="border-slate-200" />
+
+    {/* IDENTITAS RISET */}
+    <div>
+      <h3 className="text-base font-semibold text-slate-900 mb-6">
+        Identitas Riset & Akademik
+      </h3>
+
+      <div className="grid gap-6 md:grid-cols-2">
         <div>
-          <label className={label}>Nama Dosen</label>
-          <input className={field} value={form.nama_dosen} onChange={(e) => handleChange("nama_dosen", e.target.value)} required />
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Google Scholar ID
+          </label>
+          <input
+            className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
+            value={form.sinta_id}
+            onChange={(e) => handleChange("sinta_id", e.target.value)}
+          />
         </div>
+
         <div>
-          <label className={label}>NIDN</label>
-          <input className={field} value={form.nidn} onChange={(e) => handleChange("nidn", e.target.value)} required />
-        </div>
-        <div className="sm:col-span-2">
-          <label className={label}>Email</label>
-          <input className={field} value={form.email} onChange={(e) => handleChange("email", e.target.value)} />
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Scopus ID
+          </label>
+          <input
+            className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
+            value={form.scopus_author_id}
+            onChange={(e) =>
+              handleChange("scopus_author_id", e.target.value)
+            }
+          />
         </div>
 
-        {/* Fakultas & Prodi */}
         <div>
-          <label className={label}>Fakultas</label>
-          <input className={field} value={form.fakultas} onChange={(e) => handleChange("fakultas", e.target.value)} />
-        </div>
-        <div>
-          <label className={label}>Program Studi</label>
-          <input className={field} value={form.program_studi} onChange={(e) => handleChange("program_studi", e.target.value)} />
-        </div>
-        <div className="sm:col-span-2">
-          <label className={label}>Penelitian</label>
-          <input className={field} value={form.penelitian} onChange={(e) => handleChange("penelitian", e.target.value)} />
-        </div>
-
-        {/* Akademik ID */}
-        <div><label className={label}>Sinta ID</label><input className={field} value={form.sinta_id} onChange={(e) => handleChange("sinta_id", e.target.value)} /></div>
-        <div><label className={label}>Researcher ID</label><input className={field} value={form.researcher_id} onChange={(e) => handleChange("researcher_id", e.target.value)} /></div>
-        <div><label className={label}>Scopus Author ID</label><input className={field} value={form.scopus_author_id} onChange={(e) => handleChange("scopus_author_id", e.target.value)} /></div>
-        <div><label className={label}>Orchid ID</label><input className={field} value={form.orchid_id} onChange={(e) => handleChange("orchid_id", e.target.value)} /></div>
-        <div className="sm:col-span-2"><label className={label}>Webpage</label><input className={field} value={form.webpage} onChange={(e) => handleChange("webpage", e.target.value)} /></div>
-
-        {/* Pendidikan */}
-        <div><label className={label}>Pendidikan S1</label><input className={field} value={form.pendidikan_s1} onChange={(e) => handleChange("pendidikan_s1", e.target.value)} /></div>
-        <div><label className={label}>Pendidikan S2</label><input className={field} value={form.pendidikan_s2} onChange={(e) => handleChange("pendidikan_s2", e.target.value)} /></div>
-        <div><label className={label}>Pendidikan S3</label><input className={field} value={form.pendidikan_s3} onChange={(e) => handleChange("pendidikan_s3", e.target.value)} /></div>
-
-        {/* Akademik */}
-        <div className="sm:col-span-2"><label className={label}>Pekerjaan</label><input className={field} value={form.pekerjaan} onChange={(e) => handleChange("pekerjaan", e.target.value)} /></div>
-
-        {/* Text area */}
-        <div className="sm:col-span-2">
-          <label className={label}>Research Interest</label>
-          <textarea
-            className={field + " h-24"}
-            value={form.research_interest}
-            onChange={(e) => handleChange("research_interest", e.target.value)}
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            ORCID
+          </label>
+          <input
+            className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
+            value={form.orchid_id}
+            onChange={(e) => handleChange("orchid_id", e.target.value)}
           />
-        </div>
-
-        <div className="sm:col-span-2">
-          <label className={label}>Mata Kuliah Diampu</label>
-          <textarea
-            className={field + " h-24"}
-            value={form.mata_kuliah_diampu}
-            onChange={(e) => handleChange("mata_kuliah_diampu", e.target.value)}
-          />
-        </div>
-
-        <div className="sm:col-span-2">
-          <label className={label}>Publikasi</label>
-          <textarea
-            className={field + " h-24"}
-            value={form.publikasi}
-            onChange={(e) => handleChange("publikasi", e.target.value)}
-          />
-        </div>
-
-        <div className="sm:col-span-2">
-          <label className={label}>Project</label>
-          <textarea
-            className={field + " h-24"}
-            value={form.project}
-            onChange={(e) => handleChange("project", e.target.value)}
-          />
-        </div>
-
-        <div className="sm:col-span-2">
-          <label className={label}>Pengabdian Masyarakat</label>
-          <textarea
-            className={field + " h-24"}
-            value={form.pengabdian_masyarakat}
-            onChange={(e) => handleChange("pengabdian_masyarakat", e.target.value)}
-          />
-        </div>
-
-        <div className="sm:col-span-2">
-          <label className={label}>Award</label>
-          <textarea
-            className={field + " h-24"}
-            value={form.award}
-            onChange={(e) => handleChange("award", e.target.value)}
-          />
-        </div>
-
-        {/* Foto */}
-        <div className="sm:col-span-2">
-          <label className={label}>Foto Dosen</label>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <input
-              type="file"
-              accept="image/*"
-              className="block w-full text-sm"
-              onChange={(e) => handleFile(e.target.files?.[0])}
-            />
-            {form.fotoUrl ? (
-              <button
-                type="button"
-                onClick={() => setForm((prev) => ({ ...prev, fotoUrl: "", fotoFile: null }))}
-                className="rounded-2xl border bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
-              >
-                Remove
-              </button>
-            ) : null}
-          </div>
-
-          {form.fotoUrl ? (
-            <div className="mt-3 overflow-hidden rounded-3xl border bg-slate-50">
-              <div className="aspect-[16/9] w-full">
-                <img src={form.fotoUrl} alt="Preview" className="h-full w-full object-cover" />
-              </div>
-            </div>
-          ) : null}
         </div>
       </div>
-      <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-2xl border bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="rounded-2xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-soft hover:bg-primary-700"
-          >
-            Save
-          </button>
-        </div>
-    </form>
-  );
+    </div>
+
+    {/* ACTION BUTTONS */}
+    <div className="flex justify-end gap-3 pt-4">
+      <button
+        type="button"
+        onClick={onCancel}
+        className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
+      >
+        Batal
+      </button>
+
+      <button
+        type="submit"
+        className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700"
+      >
+        Simpan
+      </button>
+    </div>
+  </form>
+);
 }

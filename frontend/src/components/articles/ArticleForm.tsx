@@ -128,7 +128,6 @@ export default function ArticleForm({
       published_at: publishedAt || null,
       files: files, 
       created_by,
-      
     } as any);
   }
 
@@ -173,6 +172,10 @@ return (
             <div className="sm:col-span-2">
               <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Tanggal Publikasi</label>
               <input type="date" className={field} value={publishedAt} onChange={(e) => setPublishedAt(e.target.value)} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Pembuat</label>
+              <input type="text" className={field} value={created_by} onChange={(e) => setCreated_by(e.target.value)} />
             </div>
           </div>
         </div>
