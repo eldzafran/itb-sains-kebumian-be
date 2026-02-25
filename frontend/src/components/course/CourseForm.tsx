@@ -119,7 +119,7 @@ function submit(e: SubmitEvent<HTMLFormElement>) {
         <h3 className="font-semibold border-b pb-2">Informasi Dasar</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={label}>Program</label>
+            <label className={label}>Program<span className="text-red-500">*</span></label>
             <select className={field} value={program} onChange={e => setProgram(e.target.value)}>
               <option value="">— Pilih Program —</option>
               <option value="S2 Magister">S2 Magister</option>
@@ -128,7 +128,7 @@ function submit(e: SubmitEvent<HTMLFormElement>) {
           </div>
           {program === "S2 Magister" && (
             <div>
-              <label className={label}>Opsi Keilmuan</label>
+              <label className={label}>Opsi Keilmuan<span className="text-red-500">*</span></label>
               <select className={field} value={study_option} onChange={e => setStudyOption(e.target.value)}>
                 <option value="">— Pilih Opsi —</option>
                 <option value="Sains Atmosfer">Sains Atmosfer</option>
@@ -139,7 +139,7 @@ function submit(e: SubmitEvent<HTMLFormElement>) {
           )}
           {program === "S3 Doktoral" && (
             <div>
-              <label className={label}>Opsi Keilmuan</label>
+              <label className={label}>Opsi Keilmuan<span className="text-red-500">*</span></label>
               <select 
                 className={field} 
                 value={study_option}
@@ -152,7 +152,7 @@ function submit(e: SubmitEvent<HTMLFormElement>) {
           )}
           {program === "S2 Magister" && (
             <div>
-              <label className={label}>Spesialisasi</label>
+              <label className={label}>Spesialisasi<span className="text-slate-500 text-xs">(opsional)</span></label>
               <select className={field} value={specialization} onChange={e => setSpecialization(e.target.value)}>
                 <option value="">— Pilih Spesialisasi —</option>
                 <option value="Perubahan Iklim & Transisi Energi">Perubahan Iklim & Transisi Energi</option>
@@ -162,15 +162,15 @@ function submit(e: SubmitEvent<HTMLFormElement>) {
           )}
 
           <div>
-            <label className={label}>Kode MK</label>
+            <label className={label}>Kode MK<span className="text-red-500">*</span></label>
             <input className={field} value={course_code} onChange={e => setCourseCode(e.target.value)} maxLength={20} />
           </div>
           <div>
-            <label className={label}>Nama MK</label>
+            <label className={label}>Nama MK<span className="text-red-500">*</span></label>
             <input className={field} value={course_name} onChange={e => setCourseName(e.target.value)} maxLength={200} />
           </div>
           <div>
-            <label className={label}>SKS</label>
+            <label className={label}>SKS<span className="text-red-500">*</span></label>
             <input type="number" className={field} value={sks} onChange={e => setSks(Number(e.target.value))} min={1} />
           </div>
         </div>
@@ -178,13 +178,13 @@ function submit(e: SubmitEvent<HTMLFormElement>) {
 
       {/* Deskripsi */}
       <section className="bg-white p-6 rounded-xl shadow space-y-4">
-        <h3 className="font-semibold border-b pb-2">Deskripsi Singkat</h3>
+        <h3 className="font-semibold border-b pb-2">Deskripsi Singkat<span className="text-red-500">*</span></h3>
         <WordEditor label="Deskripsi" value={description} onChange={setDescription} />
       </section>
 
       {/* Capaian */}
       <section className="bg-white p-6 rounded-xl shadow space-y-4">
-        <h3 className="font-semibold border-b pb-2">Capaian Pembelajaran</h3>
+        <h3 className="font-semibold border-b pb-2">Capaian Pembelajaran<span className="text-red-500">*</span></h3>
         <WordEditor label="CPPS" value={cpps} onChange={setCpps} />
         <WordEditor label="CPMK" value={cpmk} onChange={setCpmk} />
         <WordEditor label="Rencana Mingguan" value={weekly_plan} onChange={setWeeklyPlan} />
@@ -193,7 +193,7 @@ function submit(e: SubmitEvent<HTMLFormElement>) {
 
       {/* Methods */}
       <section className="bg-white p-6 rounded-xl shadow space-y-4">
-        <h3 className="font-semibold border-b pb-2">Metode Pembelajaran</h3>
+        <h3 className="font-semibold border-b pb-2">Metode Pembelajaran<span className="text-red-500">*</span></h3>
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-slate-100 text-left">
@@ -217,7 +217,7 @@ function submit(e: SubmitEvent<HTMLFormElement>) {
 
       {/* Assessments */}
       <section className="bg-white p-6 rounded-xl shadow space-y-4">
-        <h3 className="font-semibold border-b pb-2">Asesmen</h3>
+        <h3 className="font-semibold border-b pb-2">Asesmen<span className="text-red-500">*</span></h3>
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-slate-100 text-left">

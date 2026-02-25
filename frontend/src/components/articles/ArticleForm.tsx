@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { fetchCategories } from "../../services/adminArticle";
 import type { ApiCategory, Props } from "../../types/articles";
+import { UploadCloud, Plus, FileText, Edit3, Trash2, Link as LinkIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import WordEditor from "../../components/WordEditor";
 import ThumbnailCrop from "../../components/ThumbnailCrop";
@@ -91,7 +93,9 @@ export default function ArticleForm({
 
   // --- LOGIKA TAMBAH DOKUMEN ---
   function addDoc() {
-    setFiles((p) => [...p, { file_name: "", file_url: "" }]);
+    if (files.length < 5) {
+      setFiles((p) => [...p, { file_name: "", file_url: "" }]);
+    }
   }
 
   function updateDoc(i: number, key: string, val: string) {
@@ -124,132 +128,137 @@ export default function ArticleForm({
     } as any);
   }
 
-  return (
-    <form onSubmit={submit} className="space-y-8">
-      <section className="space-y-4">
-        <h2 className="font-semibold text-lg">Artikel</h2>
-
+return (
+    <form onSubmit={submit} className="max-w-6xl mx-auto space-y-6 pb-20">
+      
+      {/* 1. KONTEN UTAMA (FULL WIDTH) */}
+      <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <h2 className="font-bold text-xl text-slate-800 border-b pb-4">Konten Artikel</h2>
         <WordEditor
-          label="Judul Artikel"
+          label="Judul Artikel*" 
           value={title}
           onChange={(val: string) => {
             const text = getPlainText(val);
             if (text.length <= 200) setTitle(val);
           }}
         />
+        <div className="space-y-2">
+          <WordEditor label="Konten Utama*" value={content} onChange={setContent} />
+        </div>
+      </section>
 
-        <WordEditor
-          label="Konten Artikel"
-          value={content}
-          onChange={setContent}
-        />
+      {/* 2. PENGATURAN & THUMBNAIL */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+          <h2 className="font-bold text-lg text-slate-800 border-b pb-4">Publikasi</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Status</label>
+              <select className={field} value={status} onChange={(e) => setStatus(e.target.value as any)}>
+                <option value="Draft">Draft</option>
+                <option value="Published">Published</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Kategori*</label>
+              <select className={field} value={categoriesSelected[0] ?? ""} onChange={(e) => setCategoriesSelected(e.target.value ? [Number(e.target.value)] : [])}>
+                <option value="">Pilih Kategori</option>
+                {categories.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Tanggal Publikasi</label>
+              <input type="date" className={field} value={publishedAt} onChange={(e) => setPublishedAt(e.target.value)} />
+            </div>
+          </div>
+        </div>
 
-        <div>
-          <label className="text-sm font-semibold">Thumbnail</label><br />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleFile(e.target.files?.[0])}
-          />
-          {thumbnailUrl && (
-            <img
-              src={thumbnailUrl}
-              className="mt-3 rounded-2xl aspect-[16/9] w-64 object-cover border"
-            />
+        {/* THUMBNAIL (ASPECT 16:9) */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h2 className="font-bold text-lg text-slate-800 border-b pb-4">Thumbnail*</h2>
+          <div className="relative group cursor-pointer border-2 border-dashed border-slate-200 rounded-2xl overflow-hidden hover:border-blue-400 transition-all aspect-video flex items-center justify-center bg-slate-50">
+            <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={(e) => handleFile(e.target.files?.[0])} />
+            {thumbnailUrl ? (
+              <img src={thumbnailUrl} className="w-full h-full object-cover" alt="Preview" />
+            ) : (
+              <div className="text-center p-4">
+                <UploadCloud className="mx-auto text-slate-400 mb-2" size={32} />
+                <p className="text-xs text-slate-500 font-medium">Upload Image</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. SECTION DOKUMEN (LIMIT 5) */}
+      <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="font-bold text-lg text-slate-800">Lampiran Dokumen</h2>
+            <p className="text-sm text-slate-400">Maksimal 5 dokumen pendukung ({files.length}/5)</p>
+          </div>
+          
+          {/* Tombol akan hilang jika sudah 5 */}
+          {files.length < 5 && (
+            <button type="button" onClick={addDoc} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition shadow-md shadow-blue-100">
+              <Plus size={18} /> Tambah Link
+            </button>
           )}
         </div>
 
-        <div>
-          <label className="text-sm font-semibold">Kategori</label>
-          <select
-            className={field}
-            value={categoriesSelected[0] ?? ""}
-            onChange={(e) =>
-              setCategoriesSelected(e.target.value ? [Number(e.target.value)] : [])
-            }
-          >
-            <option value="">Pilih Kategori</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+        <div className="space-y-3">
+          {files.map((d, i) => (
+            <div key={i} className="group flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:border-blue-200 hover:bg-white hover:shadow-sm transition-all">
+              <div className="p-3 rounded-xl bg-white border border-slate-100 text-blue-600 shadow-sm">
+                <FileText size={24} />
+              </div>
+
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                {/* Field Nama Dokumen Tanpa Icon */}
+                <input 
+                  className={field} 
+                  placeholder="Nama Dokumen (Contoh: Panduan Pendaftaran)" 
+                  value={d.file_name} 
+                  onChange={(e) => updateDoc(i, "file_name", e.target.value)} 
+                />
+                
+                {/* Field URL dengan Icon Link */}
+                <div className="relative">
+                  <LinkIcon className="absolute left-3 top-2.5 text-slate-400" size={16} />
+                  <input 
+                    className={`${field} pl-10`} 
+                    placeholder="URL (https://...)" 
+                    value={d.file_url} 
+                    onChange={(e) => updateDoc(i, "file_url", e.target.value)} 
+                  />
+                </div>
+              </div>
+
+              <button type="button" onClick={() => removeDoc(i)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                <Trash2 size={20} />
+              </button>
+            </div>
+          ))}
+
+          {files.length === 0 && (
+            <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/30">
+              <FileText className="mx-auto text-slate-200 mb-2" size={40} />
+              <p className="text-slate-400 text-sm italic">Belum ada dokumen yang dilampirkan.</p>
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="space-y-4">
-        <h2 className="font-semibold text-lg">Pengaturan Publikasi</h2>
-        <select
-          className={field}
-          value={status}
-          onChange={(e) => setStatus(e.target.value as any)}
-        >
-          <option value="Draft">Draft</option>
-          <option value="Published">Published</option>
-        </select>
-
-        <input
-          type="date"
-          className={field}
-          value={publishedAt}
-          onChange={(e) => setPublishedAt(e.target.value)}
-        />
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-lg">Link Dokumen</h2>
-          <button 
-            type="button" 
-            onClick={addDoc}
-            className="text-blue-600 text-sm font-semibold hover:underline"
-          >
-            + Tambah Dokumen
-          </button>
-        </div>
-
-        {files.map((d, i) => (
-          <div key={i} className="flex gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
-            <input
-              className={field}
-              placeholder="Nama Dokumen"
-              value={d.file_name ?? ""}
-              onChange={(e) => updateDoc(i, "file_name", e.target.value)}
-            />
-            <input
-              className={field}
-              placeholder="Link Dokumen (URL)"
-              value={d.file_url ?? ""}
-              onChange={(e) => updateDoc(i, "file_url", e.target.value)}
-            />
-            <button 
-              type="button" 
-              onClick={() => removeDoc(i)}
-              className="px-2 text-red-500 font-bold"
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-      </section>
-
-      <div className="flex gap-3 pt-4">
-        <button 
-          type="button" 
-          onClick={onCancel}
-          className="px-6 py-2 border rounded-xl hover:bg-slate-50"
-        >
+      <div className="flex justify-end gap-3 pt-6 border-t">
+        <button type="button" onClick={onCancel} className="px-8 py-3 bg-white text-slate-600 font-bold border border-slate-200 rounded-xl hover:bg-slate-50 transition">
           Batal
         </button>
-        <button 
-          type="submit" 
-          className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700"
-        >
+        <button type="submit" className="px-12 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition active:scale-[0.98]">
           Simpan Artikel
         </button>
       </div>
 
+      {/* CROPPER MODAL */}
       {rawFile && (
         <ThumbnailCrop
           file={rawFile}

@@ -1,7 +1,9 @@
+import { useState } from "react"; // Tambahkan useState
 import { Link } from "react-router-dom";
 import type { ApiArticle } from "../../types/articles";
 import { Trash2, CalendarDays } from "lucide-react";
 import { deleteArticle } from "../../services/adminArticle";
+import ConfirmModal from "../../components/ConfirmModal"; // Import Modal Anda
 
 function getPlainText(html?: string) {
   if (!html) return "";
@@ -13,8 +15,6 @@ function getPlainText(html?: string) {
 function buildImageUrl(path?: string) {
   if (!path) return "";
   if (path.startsWith("http")) return path;
-  
-  // Pastikan tidak ada double slash antara base URL dan path
   const base = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, ""); 
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   return `${base}${cleanPath}`;
@@ -26,21 +26,39 @@ interface Props {
 }
 
 export default function ArticleCard({ article, onDelete }: Props) {
+  // --- STATE UNTUK MODAL ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const title = getPlainText(article.title);
   const excerpt = getPlainText(article.content).slice(0, 140);
   const imageUrl = buildImageUrl(article.thumbnail);
   
-  // Ambil nama dari objek kategori pertama
   const categoryName = article.categories && article.categories.length > 0 
     ? article.categories[0].name 
     : "Uncategorized";
 
-  // Cocokkan dengan string exact dari Django ChoiceField
   const isPublished = article.status === "Published";
 
+  // --- FUNGSI EKSEKUSI HAPUS ---
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteArticle(article.id);
+      setIsModalOpen(false);
+      onDelete?.(String(article.id)); // Beritahu parent untuk hapus dari list UI
+    } catch (e: any) {
+      alert(e?.message ?? "Gagal hapus artikel");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-lg transition overflow-hidden flex flex-col h-full">
-      <Link to={`/admin/articles/${article.id}`} className="block">
+    <div className="bg-white rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-lg transition overflow-hidden flex flex-col h-full relative">
+      
+      {/* Link ke Detail/Edit */}
+      <Link to={`/admin/articles/edit/${article.id}`} className="block">
         <div className="h-48 overflow-hidden bg-gray-100">
           {imageUrl ? (
             <img
@@ -61,7 +79,6 @@ export default function ArticleCard({ article, onDelete }: Props) {
           <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full">
             {categoryName}
           </span>
-
           <span className={`text-sm px-3 py-1 rounded-full ${
             isPublished ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
           }`}>
@@ -91,22 +108,25 @@ export default function ArticleCard({ article, onDelete }: Props) {
             Edit
           </Link>
 
+          {/* Tombol Hapus: Sekarang hanya membuka state Modal */}
           <button
+            type="button"
             className="ml-3 px-3 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
-            onClick={async () => {
-              if (!window.confirm("Hapus artikel ini?")) return;
-              try {
-                await deleteArticle(article.id);
-                onDelete?.(String(article.id));
-              } catch (e: any) {
-                alert(e?.message ?? "Gagal hapus artikel");
-              }
-            }}
+            onClick={() => setIsModalOpen(true)}
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className={`w-5 h-5 ${isDeleting ? "animate-pulse" : ""}`} />
           </button>
         </div>
       </div>
+
+      {/* --- RENDER MODAL DI SINI --- */}
+      <ConfirmModal
+        isOpen={isModalOpen}
+        title="Hapus Artikel"
+        message={`Apakah Anda yakin ingin menghapus artikel "${title}"?`}
+        onCancel={() => setIsModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
