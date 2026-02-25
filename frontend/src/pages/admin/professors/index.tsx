@@ -3,16 +3,24 @@ import { Link } from "react-router-dom";
 import {
   fetchProfessors,
   deleteAdminProfessor,
+  fetchLecturerCategories,
+  createLecturerCategory,
+  deleteLecturerCategory,
   type ApiProfessor,
+  type ApiLecturerCategory,
 } from "../../../services/adminProfessor";
 
 export default function AdminProfessorsPage() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<ApiProfessor[]>([]);
+  const [categories, setCategories] = useState<ApiLecturerCategory[]>([]);
   const [err, setErr] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const pageSize = 6; // batas per halaman
+  const pageSize = 6;
+
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
 
   async function load() {
     setErr("");
@@ -27,19 +35,47 @@ export default function AdminProfessorsPage() {
     }
   }
 
+  const loadCategories = async () => {
+    try {
+      const res = await fetchLecturerCategories();
+      setCategories(res.data ?? res ?? []);
+    } catch {
+      setCategories([]);
+    }
+  };
+
   useEffect(() => {
     load();
+    loadCategories();
   }, []);
 
   async function onDelete(id: number) {
-    const ok = window.confirm("Hapus data dosen ini?");
-    if (!ok) return;
+    if (!window.confirm("Hapus data dosen ini?")) return;
     try {
       await deleteAdminProfessor(id);
       setItems((prev) => prev.filter((x) => x.id !== id));
     } catch (e: any) {
       alert(e?.message ?? "Gagal hapus");
     }
+  }
+
+  async function handleCreateCategory() {
+    if (!newCategory.trim()) return;
+
+    const res = await createLecturerCategory({
+      name: newCategory.trim(),
+    });
+
+    const created = res.data;
+    setCategories((prev) => [...prev, created]);
+    setNewCategory("");
+  }
+
+  async function handleDeleteCategory(id: number) {
+    if (!window.confirm("Hapus kategori ini?")) return;
+
+    await deleteLecturerCategory(id);
+    setCategories((prev) => prev.filter((c) => c.id !== id));
   }
 
   const filteredItems = useMemo(() => {
@@ -58,26 +94,25 @@ export default function AdminProfessorsPage() {
   const totalPages = Math.ceil(filteredItems.length / pageSize);
 
   return (
-    <div className="p-8 min-h-screen">
+    <div className="p-6">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Manajemen Dosen</h1>
-          <p className="text-gray-500">
-            Kelola data dosen, publikasi, dan aktivitas penelitian
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Manajemen Dosen</h1>
+          <p className="text-black/60">Kelola data dosen</p>
         </div>
 
-        <div className="flex gap-3">
-          <Link
-            to="/admin/categories"
-            className="px-5 py-2.5 rounded-xl bg-purple-600 text-white font-semibold shadow hover:bg-purple-700 transition"
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowCategoryModal(true)}
+            className="px-4 py-2 rounded-xl border bg-white text-blue-700 hover:bg-blue-50"
           >
             Kelola Kategori
-          </Link>
+          </button>
+
           <Link
             to="/admin/professors/create"
-            className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+            className="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700"
           >
             + Tambah Dosen
           </Link>
@@ -85,109 +120,141 @@ export default function AdminProfessorsPage() {
       </div>
 
       {/* SEARCH */}
-      <div className="mb-6">
+      <div className="flex gap-3 mb-4">
         <input
           type="text"
           placeholder="Cari nama dosen atau NIDN..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none"
+          className="border rounded-lg px-3 py-2 flex-1"
         />
       </div>
 
-      {/* ERROR */}
       {err && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-xl border bg-red-50 border-red-200 px-4 py-3 text-sm text-red-700">
           {err}
         </div>
       )}
 
-      {/* CARD GRID */}
+      {/* CONTENT */}
       {loading ? (
-        <div className="text-gray-600">Loading...</div>
+        <div>Loading...</div>
       ) : filteredItems.length === 0 ? (
-        <div className="rounded-2xl border bg-white p-8 text-gray-500 shadow">
-          Belum ada data dosen.
-        </div>
+        <div className="rounded-xl border bg-white p-6">Belum ada data dosen.</div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedItems.map((d) => (
-              <div
-                key={d.id}
-                className="bg-white rounded-2xl shadow border p-6 hover:shadow-md transition"
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {paginatedItems.map((d) => (
+            <div
+              key={d.id}
+              className="bg-white rounded-xl border shadow p-6 hover:shadow-md transition"
+            >
+              <img
+                src={d.foto_url ?? "/default-avatar.png"}
+                alt={d.nama_dosen}
+                className="w-full h-40 object-cover rounded-xl mb-4"
+              />
+              <h2 className="text-lg font-bold text-gray-900 mb-1">{d.nama_dosen}</h2>
+              <p className="text-sm text-gray-600 mb-2">{d.jabatan}</p>
+
+              <p className="text-sm text-gray-600 mb-4">NIDN: {d.nidn}</p>
+              <p className="text-sm text-gray-600 mb-4">📧 {d.email}</p>
+
+              <div className="flex gap-2">
+                <Link
+                  to={`/admin/professors/detail/${d.id}`}
+                  className="text-green-600 hover:bg-green-50 p-2 rounded-lg"
+                >
+                  👁
+                </Link>
+                <Link
+                  to={`/admin/professors/edit/${d.id}`}
+                  className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg"
+                >
+                  ✏️
+                </Link>
+                <button
+                  onClick={() => onDelete(d.id)}
+                  className="text-red-600 hover:bg-red-50 p-2 rounded-lg"
+                >
+                  🗑
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* PAGINATION */}
+      {filteredItems.length > 0 && (
+        <div className="flex justify-center items-center gap-2 p-4">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`px-3 py-1 rounded ${
+                page === p
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* MODAL CATEGORY */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold text-gray-900">
+                Kelola Kategori Dosen
+              </h2>
+              <button
+                onClick={() => setShowCategoryModal(false)}
+                className="text-gray-400 hover:text-black text-xl"
               >
-                {/* FOTO + NAMA */}
-                <div className="flex items-center gap-4 mb-4">
-                  <img
-                    src={d.foto_url ?? "/default-avatar.png"}
-                    alt={d.nama_dosen}
-                    className="w-16 h-16 rounded-full object-cover border"
-                  />
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">
-                      {d.nama_dosen}
-                    </h2>
-                    <p className="text-sm text-gray-500">{d.jabatan}</p>
-                  </div>
-                </div>
+                ✕
+              </button>
+            </div>
 
-                {/* INFO */}
-                <div className="text-sm text-gray-600 space-y-1 mb-4">
-                  <p>NIDN: {d.nidn}</p>
-                  <p>📧 {d.email}</p>
-                </div>
+            <div className="bg-gray-50 rounded-2xl p-4 mb-6 border">
+              <p className="text-sm text-gray-600 mb-3">Tambah Kategori Baru</p>
+              <div className="flex gap-3">
+                <input
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  placeholder="Masukkan nama kategori..."
+                  className="flex-1 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={handleCreateCategory}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-xl font-medium"
+                >
+                  Tambah
+                </button>
+              </div>
+            </div>
 
-                {/* BADGES */}
-                <div className="flex gap-2 mb-4 flex-wrap">
-                  <span className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
-                    {d.kategori}
-                  </span>
-                </div>
-
-                {/* ACTIONS */}
-                <div className="flex gap-2">
-                  <Link
-                    to={`/admin/professors/detail/${d.id}`}
-                    className="text-green-600 hover:bg-green-50 p-2 rounded-lg"
-                  >
-                    👁
-                  </Link>
-                  <Link
-                    to={`/admin/professors/edit/${d.id}`}
-                    className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg"
-                  >
-                    ✏️
-                  </Link>
+            <div className="space-y-3 max-h-72 overflow-y-auto">
+              {categories.map((c, index) => (
+                <div
+                  key={c.id ?? `temp-${index}`}
+                  className="flex justify-between items-center bg-white border rounded-xl px-4 py-3"
+                >
+                  <span className="font-medium text-gray-700">{c.name}</span>
                   <button
-                    onClick={() => onDelete(d.id)}
-                    className="text-red-600 hover:bg-red-50 p-2 rounded-lg"
-                    type="button"
+                    onClick={() => handleDeleteCategory(c.id)}
+                    className="text-red-500 hover:text-red-700 text-sm font-medium"
                   >
-                    🗑
+                    Hapus
                   </button>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-
-          {/* PAGINATION */}
-          <div className="flex justify-center items-center gap-2 p-4">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                className={`px-3 py-1 rounded ${
-                  page === p
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </>
+        </div>
       )}
     </div>
   );

@@ -1,192 +1,185 @@
 import { http } from "../lib/http";
 
+// ===================== PROFESSOR =====================
+
 export type ApiProfessor = {
   id: number;
-  nama_dosen: string;
-  nidn: string;
+  slug: string;
+  name: string;
+  nip: string;
+  position: string;
+  photo?: string;
   email?: string;
-
-  fakultas: string;
-  program_studi: string;
-  penelitian: string;
-
-  foto_url?: string;
-  foto_dosen?: string;
-
-  // ID akademik
-  sinta_id?: string;
-  researcher_id?: string;
-  scopus_author_id?: string;
-  orchid_id?: string;
   webpage?: string;
-
-  // pendidikan
-  pendidikan_s1?: string;
-  pendidikan_s2?: string;
-  pendidikan_s3?: string;
-
-  // akademik
-  pekerjaan?: string;
-
-  // text area
-  research_interest?: string;
-  mata_kuliah_diampu?: string;
-  publikasi?: string;
-  project?: string;
-  pengabdian_masyarakat?: string;
-  award?: string;
-
+  is_active: boolean;
   created_at: string;
+  updated_at: string;
+  categories: number[];
+  courses: {
+    id: number;
+    course_name: string;
+    course_code: string;
+  }[];
 };
 
-// ✅ Fetch all professors
 export async function fetchProfessors(): Promise<{ dosens: ApiProfessor[] }> {
   return http<{ dosens: ApiProfessor[] }>("/api/lecturers/");
 }
 
-// ✅ Get single professor
 export async function getAdminProfessor(id: number): Promise<ApiProfessor> {
   return http<ApiProfessor>(`/api/lecturers/${id}/`);
 }
 
-// ✅ Create professor
+// ===================== CREATE =====================
+
 export async function createAdminProfessor(data: {
-  nama_dosen: string;
-  nidn: string;
+  name: string;
+  nip: string;
+  position: string;
+
+  categories?: number[];
+  course_ids?: number[];
+
   email?: string;
-  fakultas: string;
-  program_studi: string;
-  penelitian: string;
-
-  sinta_id?: string;
-  researcher_id?: string;
-  scopus_author_id?: string;
-  orchid_id?: string;
   webpage?: string;
+  is_active?: boolean;
 
-  pendidikan_s1?: string;
-  pendidikan_s2?: string;
-  pendidikan_s3?: string;
-
-  pekerjaan?: string;
-
-  research_interest?: string;
-  mata_kuliah_diampu?: string;
-  publikasi?: string;
-  project?: string;
-  pengabdian_masyarakat?: string;
-  award?: string;
-
-  foto?: File[];
+  photo?: File[];
 }): Promise<any> {
   const formData = new FormData();
-  formData.append("nama_dosen", data.nama_dosen);
-  formData.append("nidn", data.nidn);
-  if (data.email) formData.append("email", data.email);
-  formData.append("fakultas", data.fakultas);
-  formData.append("program_studi", data.program_studi);
-  formData.append("penelitian", data.penelitian);
 
-  if (data.sinta_id) formData.append("sinta_id", data.sinta_id);
-  if (data.researcher_id) formData.append("researcher_id", data.researcher_id);
-  if (data.scopus_author_id) formData.append("scopus_author_id", data.scopus_author_id);
-  if (data.orchid_id) formData.append("orchid_id", data.orchid_id);
-  if (data.webpage) formData.append("webpage", data.webpage);
+  formData.append("name", data.name);
+  formData.append("nip", data.nip);
+  formData.append("position", data.position);
+  formData.append("is_active", String(data.is_active ?? true));
 
-  if (data.pendidikan_s1) formData.append("pendidikan_s1", data.pendidikan_s1);
-  if (data.pendidikan_s2) formData.append("pendidikan_s2", data.pendidikan_s2);
-  if (data.pendidikan_s3) formData.append("pendidikan_s3", data.pendidikan_s3);
-
-  if (data.pekerjaan) formData.append("pekerjaan", data.pekerjaan);
-
-  if (data.research_interest) formData.append("research_interest", data.research_interest);
-  if (data.mata_kuliah_diampu) formData.append("mata_kuliah_diampu", data.mata_kuliah_diampu);
-  if (data.publikasi) formData.append("publikasi", data.publikasi);
-  if (data.project) formData.append("project", data.project);
-  if (data.pengabdian_masyarakat) formData.append("pengabdian_masyarakat", data.pengabdian_masyarakat);
-  if (data.award) formData.append("award", data.award);
-
-  if (data.foto) {
-    data.foto.forEach((f) => formData.append("foto_dosen", f));
+  // categories
+  if (Array.isArray(data.categories)) {
+    data.categories.forEach((id) => {
+      formData.append("categories", String(Number(id)));
+    });
   }
 
-  return http<any>("/api/lecturers/create/", {
+  // course_ids (WAJIB → jangan kirim kosong string)
+  if (Array.isArray(data.course_ids) && data.course_ids.length > 0) {
+    data.course_ids.forEach((id) => {
+      formData.append("course_ids", String(Number(id)));
+    });
+  }
+
+  if (data.email) formData.append("email", data.email);
+  if (data.webpage) formData.append("webpage", data.webpage);
+
+  if (Array.isArray(data.photo)) {
+    data.photo.forEach((file) => {
+      formData.append("photo", file);
+    });
+  }
+
+  return http<any>("/api/lecturers/", {
     method: "POST",
     body: formData,
   });
 }
 
-// ✅ Update professor
+// ===================== UPDATE (FULL PUT) =====================
+
 export async function updateAdminProfessor(
   id: number,
   data: {
-    nama_dosen: string;
-    nidn: string;
+    name: string;
+    nip: string;
+    position: string;
+
+    categories?: number[];
+    course_ids?: number[];
+
     email?: string;
-    fakultas: string;
-    program_studi: string;
-    penelitian: string;
-
-    sinta_id?: string;
-    researcher_id?: string;
-    scopus_author_id?: string;
-    orchid_id?: string;
     webpage?: string;
+    is_active?: boolean;
 
-    pendidikan_s1?: string;
-    pendidikan_s2?: string;
-    pendidikan_s3?: string;
-
-    pekerjaan?: string;
-
-    research_interest?: string;
-    mata_kuliah_diampu?: string;
-    publikasi?: string;
-    project?: string;
-    pengabdian_masyarakat?: string;
-    award?: string;
-
-    foto?: File[];
+    photo?: File[];
   }
 ): Promise<any> {
   const formData = new FormData();
-  formData.append("nama_dosen", data.nama_dosen);
-  formData.append("nidn", data.nidn);
-  if (data.email) formData.append("email", data.email);
-  formData.append("fakultas", data.fakultas);
-  formData.append("program_studi", data.program_studi);
-  formData.append("penelitian", data.penelitian);
 
-  if (data.sinta_id) formData.append("sinta_id", data.sinta_id);
-  if (data.researcher_id) formData.append("researcher_id", data.researcher_id);
-  if (data.scopus_author_id) formData.append("scopus_author_id", data.scopus_author_id);
-  if (data.orchid_id) formData.append("orchid_id", data.orchid_id);
-  if (data.webpage) formData.append("webpage", data.webpage);
+  formData.append("name", data.name);
+  formData.append("nip", data.nip);
+  formData.append("position", data.position);
+  formData.append("is_active", String(data.is_active ?? true));
 
-  if (data.pendidikan_s1) formData.append("pendidikan_s1", data.pendidikan_s1);
-  if (data.pendidikan_s2) formData.append("pendidikan_s2", data.pendidikan_s2);
-  if (data.pendidikan_s3) formData.append("pendidikan_s3", data.pendidikan_s3);
-
-  if (data.pekerjaan) formData.append("pekerjaan", data.pekerjaan);
-
-  if (data.research_interest) formData.append("research_interest", data.research_interest);
-  if (data.mata_kuliah_diampu) formData.append("mata_kuliah_diampu", data.mata_kuliah_diampu);
-  if (data.publikasi) formData.append("publikasi", data.publikasi);
-  if (data.project) formData.append("project", data.project);
-  if (data.pengabdian_masyarakat) formData.append("pengabdian_masyarakat", data.pengabdian_masyarakat);
-  if (data.award) formData.append("award", data.award);
-
-  if (data.foto) {
-    data.foto.forEach((f) => formData.append("foto_dosen", f));
+  // categories
+  if (Array.isArray(data.categories)) {
+    data.categories.forEach((id) => {
+      formData.append("categories", String(Number(id)));
+    });
   }
 
-  return http<any>(`/api/lecturers/update/${id}/`, {
-    method: "POST", // sesuai backend
+  // course_ids (WAJIB supaya tidak error required)
+  if (Array.isArray(data.course_ids) && data.course_ids.length > 0) {
+    data.course_ids.forEach((id) => {
+      formData.append("course_ids", String(Number(id)));
+    });
+  }
+
+  if (data.email) formData.append("email", data.email);
+  if (data.webpage) formData.append("webpage", data.webpage);
+
+  if (Array.isArray(data.photo)) {
+    data.photo.forEach((file) => {
+      formData.append("photo", file);
+    });
+  }
+
+  return http<any>(`/api/lecturers/${id}/`, {
+    method: "PUT",
     body: formData,
   });
 }
 
-// ✅ Delete professor
+// ===================== DELETE =====================
+
 export async function deleteAdminProfessor(id: number) {
-  return http(`/api/lecturers/delete/${id}/`, { method: "DELETE" });
+  return http(`/api/lecturers/${id}/`, {
+    method: "DELETE",
+  });
+}
+
+// ===================== CATEGORY =====================
+
+export type ApiLecturerCategory = {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function fetchLecturerCategories() {
+  const res = await http<any>("/api/lecturer-categories/");
+  return res?.data?.results ?? [];
+}
+
+export async function createLecturerCategory(data: { name: string }) {
+  return http<ApiLecturerCategory>("/api/lecturer-categories/", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function updateLecturerCategory(
+  id: number,
+  data: { name: string }
+) {
+  return http<ApiLecturerCategory>(`/api/lecturer-categories/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function deleteLecturerCategory(id: number) {
+  return http(`/api/lecturer-categories/${id}/`, {
+    method: "DELETE",
+  });
 }

@@ -114,7 +114,7 @@ function buildFormData(p: CoursePayload) {
 
 // ✅ Create course
 export async function createCourse(payload: CoursePayload) {
-  return http<{ message: string; course: ApiCourse }>("/api/courses/create/", {
+  return http<{ message: string; course: ApiCourse }>("/api/courses/", {
     method: "POST",
     body: buildFormData(payload),
   });
@@ -122,7 +122,7 @@ export async function createCourse(payload: CoursePayload) {
 
 // ✅ Update course
 export async function updateCourse(id: number, payload: CoursePayload) {
-  return http<{ message: string; course: ApiCourse }>(`/api/courses/${id}/update/`, {
+  return http<{ message: string; course: ApiCourse }>(`/api/courses/${id}/`, {
     method: "POST",
     body: buildFormData(payload),
   });

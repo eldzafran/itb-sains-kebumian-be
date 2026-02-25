@@ -13,7 +13,6 @@ import EditArticlePage from "../pages/admin/articles/";
 import AdminProfessorsPage from "../pages/admin/professors";
 import CreateProfessorPage from "../pages/admin/professors/create";
 import EditProfessorPage from "../pages/admin/professors/";
-import ProfessorDetailPage from "../pages/admin/professors/detail";
 import AdminCoursesPage from "../pages/admin/course";
 import CreateCoursePage from "../pages/admin/course/create";
 import EditCoursePage from "../pages/admin/course/edit";
@@ -52,7 +51,6 @@ const adminRoutes: RouteObject[] = [
           { path: "professors", element: <AdminProfessorsPage /> },
           { path: "professors/create", element: <CreateProfessorPage /> },
           { path: "professors/edit/:id", element: <EditProfessorPage /> },
-          { path: "professors/detail/:id", element: <ProfessorDetailPage /> },
 
           { path: "course", element: <AdminCoursesPage /> },
           { path: "course/create", element: <CreateCoursePage /> },

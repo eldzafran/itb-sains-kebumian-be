@@ -1,273 +1,394 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import WordEditor from "../WordEditor";
+import Select from "react-select";
+
 export type ProfessorFormValues = {
   nama_dosen: string;
-  nidn: string;
+  nip: string;
+  jabatan_fungsional: string;
+  kategori_ids: number[];
+  course_ids: number[];
+
   email?: string;
-  fakultas: string;
-  program_studi: string;
-  penelitian: string;
+  webpage?: string;
+
   sinta_id?: string;
   researcher_id?: string;
   scopus_author_id?: string;
   orchid_id?: string;
-  webpage?: string;
-  pendidikan_s1?: string;
-  pendidikan_s2?: string;
-  pendidikan_s3?: string;
-  pekerjaan?: string;
+
   research_interest?: string;
-  mata_kuliah_diampu?: string;
-  publikasi?: string;
-  project?: string;
-  pengabdian_masyarakat?: string;
-  award?: string;
+  education_history?: string;
+  publications?: string;
+  research_projects?: string;
+  community_service?: string;
+  awards?: string;
+
   fotoUrl?: string;
   fotoFile?: File | null;
 };
 
-export type ProfessorFormInitial = ProfessorFormValues & {
-  id?: number;
-  updatedAt?: string;
-};
-
 type Props = {
-  initial?: ProfessorFormInitial | null;
+  existingNips?: string[];
   onCancel: () => void;
   onSubmit: (values: ProfessorFormValues) => void;
 };
 
-export default function ProfessorForm({ initial, onCancel, onSubmit }: Props) {
+type Category = { id: number; name: string };
+type Course = { id: number; course_name: string };
+
+export default function ProfessorForm({
+  existingNips = [],
+  onCancel,
+  onSubmit,
+}: Props) {
   const [form, setForm] = useState<ProfessorFormValues>({
-    nama_dosen: initial?.nama_dosen ?? "",
-    nidn: initial?.nidn ?? "",
-    email: initial?.email ?? "",
-    fakultas: initial?.fakultas ?? "",
-    program_studi: initial?.program_studi ?? "",
-    penelitian: initial?.penelitian ?? "",
-    sinta_id: initial?.sinta_id ?? "",
-    researcher_id: initial?.researcher_id ?? "",
-    scopus_author_id: initial?.scopus_author_id ?? "",
-    orchid_id: initial?.orchid_id ?? "",
-    webpage: initial?.webpage ?? "",
-    pendidikan_s1: initial?.pendidikan_s1 ?? "",
-    pendidikan_s2: initial?.pendidikan_s2 ?? "",
-    pendidikan_s3: initial?.pendidikan_s3 ?? "",
-    pekerjaan: initial?.pekerjaan ?? "",
-    research_interest: initial?.research_interest ?? "",
-    mata_kuliah_diampu: initial?.mata_kuliah_diampu ?? "",
-    publikasi: initial?.publikasi ?? "",
-    project: initial?.project ?? "",
-    pengabdian_masyarakat: initial?.pengabdian_masyarakat ?? "",
-    award: initial?.award ?? "",
-    fotoUrl: initial?.fotoUrl ?? "",
+    nama_dosen: "",
+    nip: "",
+    jabatan_fungsional: "",
+    kategori_ids: [],
+    course_ids: [],
+    email: "",
+    webpage: "",
+    sinta_id: "",
+    researcher_id: "",
+    scopus_author_id: "",
+    orchid_id: "",
+    research_interest: "",
+    education_history: "",
+    publications: "",
+    research_projects: "",
+    community_service: "",
+    awards: "",
+    fotoUrl: "",
     fotoFile: null,
   });
 
-  const field =
-    "w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-primary-300 focus:ring-4 focus:ring-primary-100";
-  const label = "block text-sm font-semibold text-slate-700 mb-1";
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-  function handleChange(key: keyof ProfessorFormValues, value: string) {
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const catRes = await fetch(`${API_BASE}/api/lecturer-categories`);
+        const courseRes = await fetch(`${API_BASE}/api/courses`);
+
+        const catData = await catRes.json();
+        const courseData = await courseRes.json();
+
+        const extractArray = (data: any) => {
+          if (Array.isArray(data)) return data;
+          if (Array.isArray(data?.results)) return data.results;
+          if (Array.isArray(data?.data)) return data.data;
+          if (Array.isArray(data?.data?.results)) return data.data.results;
+          return [];
+        };
+
+        setCategories(extractArray(catData));
+        setCourses(extractArray(courseData));
+      } catch (err) {
+        console.error("Load error:", err);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  function handleChange(key: keyof ProfessorFormValues, value: any) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function stripHtml(html: string) {
+    return html.replace(/<[^>]*>?/gm, "");
+  }
+
+  function validateEditorLength(value: string) {
+    return stripHtml(value).length <= 500;
+  }
+
+  function validateEmail(email: string) {
+    return email ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) : true;
+  }
+
+  function validateURL(url: string) {
+    return url ? /^(https?:\/\/[^\s]+)$/.test(url) : true;
   }
 
   function handleFile(file?: File | null) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) return;
-    setForm((prev) => ({ ...prev, fotoFile: file }));
+    if (!file.type.startsWith("image/")) return alert("File harus berupa gambar");
+    if (file.size > 2 * 1024 * 1024) return alert("Ukuran file maksimal 2MB");
 
+    const img = new Image();
     const reader = new FileReader();
+
     reader.onload = () => {
-      setForm((prev) => ({ ...prev, fotoUrl: String(reader.result || "") }));
+      img.src = reader.result as string;
     };
+
+    img.onload = () => {
+      if (img.width !== img.height)
+        return alert("Foto harus rasio 1:1");
+
+      setForm((prev) => ({
+        ...prev,
+        fotoFile: file,
+        fotoUrl: img.src,
+      }));
+    };
+
     reader.readAsDataURL(file);
   }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!form.fotoUrl) return alert("Foto wajib diisi");
+    if (!form.nama_dosen) return alert("Nama wajib diisi");
+    if (!form.nip) return alert("NIP wajib diisi");
+    if (existingNips.includes(form.nip))
+      return alert("NIP sudah digunakan (harus unik)");
+    if (!form.jabatan_fungsional) return alert("Jabatan wajib diisi");
+    if (!form.kategori_ids.length)
+      return alert("Minimal pilih 1 kategori");
+
+    if (!validateEmail(form.email || ""))
+      return alert("Format email tidak valid");
+
+    if (!validateURL(form.webpage || ""))
+      return alert("Format URL tidak valid");
+
+    const editors = [
+      form.research_interest,
+      form.education_history,
+      form.publications,
+      form.research_projects,
+      form.community_service,
+      form.awards,
+    ];
+
+    for (const field of editors) {
+      if (field && !validateEditorLength(field))
+        return alert("Maksimal 500 karakter (tanpa HTML)");
+    }
+
     onSubmit(form);
   }
 
-return (
-  <form
-    onSubmit={submit}
-    className="rounded-2xl bg-white p-8 shadow-sm border border-slate-200 space-y-8"
-  >
-    {/* TITLE */}
-    <div>
-      <h2 className="text-xl font-semibold text-slate-900">
-        {initial ? "Edit Dosen" : "Tambah Dosen Baru"}
-      </h2>
-    </div>
+  return (
+    <form onSubmit={submit} className="max-w-6xl mx-auto">
 
-    {/* FOTO PROFIL */}
-    <div>
-      <label className="block text-sm font-semibold text-slate-700 mb-2">
-        Foto Profil
-      </label>
+      {/* ================= INFORMASI DASAR ================= */}
+      <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-12 mb-24">
 
-      <div className="flex flex-col gap-3">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleFile(e.target.files?.[0])}
-          className="block w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white"
-        />
-
-        <p className="text-xs text-slate-500">
-          Format: JPG, PNG. Maksimal 5MB. Rekomendasi rasio 1:1 (600x600px)
-        </p>
-      </div>
-
-      {form.fotoUrl && (
-        <div className="mt-4 w-40 aspect-square rounded-xl overflow-hidden border">
-          <img
-            src={form.fotoUrl}
-            alt="Preview"
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
-    </div>
-
-    {/* GRID FORM */}
-    <div className="grid gap-6 md:grid-cols-2">
-      <div className="md:col-span-2">
-        <label className="block text-sm font-semibold text-slate-700 mb-2">
-          Nama Lengkap
-        </label>
-        <input
-          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
-          value={form.nama_dosen}
-          onChange={(e) => handleChange("nama_dosen", e.target.value)}
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-2">
-          NIP / NIDN
-        </label>
-        <input
-          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
-          value={form.nidn}
-          onChange={(e) => handleChange("nidn", e.target.value)}
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-2">
-          Jabatan Fungsional
-        </label>
-        <input
-          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
-          placeholder="Contoh: Profesor, Lektor Kepala"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-2">
-          Email
-        </label>
-        <input
-          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
-          value={form.email}
-          onChange={(e) => handleChange("email", e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-2">
-          Webpage
-        </label>
-        <input
-          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
-          placeholder="https://example.com/profile"
-          value={form.webpage}
-          onChange={(e) => handleChange("webpage", e.target.value)}
-        />
-      </div>
-
-      <div className="md:col-span-2">
-        <label className="block text-sm font-semibold text-slate-700 mb-2">
-          Bidang Penelitian
-        </label>
-        <textarea
-          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm h-24"
-          placeholder="Machine Learning, Artificial Intelligence..."
-          value={form.research_interest}
-          onChange={(e) =>
-            handleChange("research_interest", e.target.value)
-          }
-        />
-      </div>
-    </div>
-
-    {/* DIVIDER */}
-    <hr className="border-slate-200" />
-
-    {/* IDENTITAS RISET */}
-    <div>
-      <h3 className="text-base font-semibold text-slate-900 mb-6">
-        Identitas Riset & Akademik
-      </h3>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2">
-            Google Scholar ID
-          </label>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
-            value={form.sinta_id}
-            onChange={(e) => handleChange("sinta_id", e.target.value)}
-          />
+        <div className="mb-10">
+          <h2 className="text-3xl font-bold text-slate-900">
+            Informasi Dasar Dosen
+          </h2>
+          <p className="text-sm text-slate-500 mt-2">
+            Identitas utama dan metadata dosen.
+          </p>
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2">
-            Scopus ID
+        {/* FOTO */}
+        <div className="mb-10">
+          <label className="block text-sm font-semibold text-slate-700 mb-3">
+            Foto Profil *
           </label>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
-            value={form.scopus_author_id}
-            onChange={(e) =>
-              handleChange("scopus_author_id", e.target.value)
+
+          <div className="flex items-center gap-6">
+            <div className="w-40 h-40 rounded-xl border bg-slate-100 flex items-center justify-center overflow-hidden">
+              {form.fotoUrl ? (
+                <img src={form.fotoUrl} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-sm text-slate-400">Preview</span>
+              )}
+            </div>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFile(e.target.files?.[0])}
+              className="text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <Input label="Nama Lengkap *" value={form.nama_dosen} onChange={(v)=>handleChange("nama_dosen",v)} />
+          <Input label="NIP *" value={form.nip} onChange={(v)=>handleChange("nip",v)} />
+          <Input label="Jabatan *" value={form.jabatan_fungsional} onChange={(v)=>handleChange("jabatan_fungsional",v)} />
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Kategori *
+            </label>
+            <Select
+              isMulti
+              options={categories.map((cat) => ({
+                value: cat.id,
+                label: cat.name,
+              }))}
+              value={categories
+                .filter((cat) => form.kategori_ids.includes(cat.id))
+                .map((cat) => ({
+                  value: cat.id,
+                  label: cat.name,
+                }))
+              }
+              onChange={(selected) =>
+                setForm({
+                  ...form,
+                  kategori_ids: selected
+                    ? selected.map((item) => item.value)
+                    : [],
+                })
+              }
+            />
+          </div>
+
+          <Input label="Email" value={form.email} onChange={(v)=>handleChange("email",v)} />
+          <Input label="Webpage" value={form.webpage} onChange={(v)=>handleChange("webpage",v)} />
+          <Input label="SINTA ID" value={form.sinta_id} onChange={(v)=>handleChange("sinta_id",v)} />
+          <Input label="Researcher ID" value={form.researcher_id} onChange={(v)=>handleChange("researcher_id",v)} />
+          <Input label="Scopus Author ID" value={form.scopus_author_id} onChange={(v)=>handleChange("scopus_author_id",v)} />
+          <Input label="ORCID ID" value={form.orchid_id} onChange={(v)=>handleChange("orchid_id",v)} />
+        </div>
+      </div>
+
+
+      {/* ================= INFORMASI AKADEMIK ================= */}
+      <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-12">
+
+        <div className="mb-10">
+          <h2 className="text-3xl font-bold text-slate-900">
+            Informasi Akademik
+          </h2>
+          <p className="text-sm text-slate-500 mt-2">
+            Data pengajaran dan rekam jejak akademik.
+          </p>
+        </div>
+
+        <div className="mb-8">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Mata Kuliah yang Diajar
+          </label>
+          <Select
+            isMulti
+            options={courses.map((course) => ({
+              value: course.id,
+              label: course.course_name,
+            }))}
+            value={courses
+              .filter((course) => form.course_ids.includes(course.id))
+              .map((course) => ({
+                value: course.id,
+                label: course.course_name,
+              }))
+            }
+            onChange={(selected) =>
+              setForm({
+                ...form,
+                course_ids: selected
+                  ? selected.map((item) => item.value)
+                  : [],
+              })
             }
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2">
-            ORCID
-          </label>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm"
-            value={form.orchid_id}
-            onChange={(e) => handleChange("orchid_id", e.target.value)}
+        <div className="mb-8">
+          <WordEditor
+            label="Research Interest"
+            value={form.research_interest || ""}
+            onChange={(val) => handleChange("research_interest", val)}
+          />
+        </div>
+
+        <div className="mb-8">
+          <WordEditor
+            label="Riwayat Pendidikan"
+            value={form.education_history || ""}
+            onChange={(val) => handleChange("education_history", val)}
+          />
+        </div>
+
+        <div className="mb-8">
+          <WordEditor
+            label="Publikasi"
+            value={form.publications || ""}
+            onChange={(val) => handleChange("publications", val)}
+          />
+        </div>
+
+        <div className="mb-8">
+          <WordEditor
+            label="Proyek Penelitian"
+            value={form.research_projects || ""}
+            onChange={(val) => handleChange("research_projects", val)}
+          />
+        </div>
+
+        <div className="mb-8">
+          <WordEditor
+            label="Pengabdian kepada Masyarakat"
+            value={form.community_service || ""}
+            onChange={(val) => handleChange("community_service", val)}
+          />
+        </div>
+
+        <div className="mb-8">
+          <WordEditor
+            label="Award / Penghargaan"
+            value={form.awards || ""}
+            onChange={(val) => handleChange("awards", val)}
           />
         </div>
       </div>
-    </div>
 
-    {/* ACTION BUTTONS */}
-    <div className="flex justify-end gap-3 pt-4">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
-      >
-        Batal
-      </button>
+      {/* BUTTON DI LUAR CARD */}
+      <div className="flex justify-end gap-4 mt-16">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-6 py-3 rounded-xl border border-slate-300"
+        >
+          Batal
+        </button>
 
-      <button
-        type="submit"
-        className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700"
-      >
-        Simpan
-      </button>
+        <button
+          type="submit"
+          className="px-8 py-3 rounded-xl bg-blue-600 text-white shadow"
+        >
+          Simpan
+        </button>
+      </div>
+
+    </form>
+  );
+}
+
+function Input({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value?: string;
+  onChange: (val: string) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-1">
+        {label}
+      </label>
+      <input
+        type="text"
+        className="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </div>
-  </form>
-);
+  );
 }

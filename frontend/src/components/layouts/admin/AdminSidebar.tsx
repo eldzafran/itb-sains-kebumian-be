@@ -1,4 +1,3 @@
-
 import AdminNavLinks from "../admin/AdminNavlinks";
 
 type Props = {

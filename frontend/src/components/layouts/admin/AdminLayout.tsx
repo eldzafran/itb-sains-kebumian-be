@@ -1,6 +1,5 @@
+import { useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
-import AdminNavbar from "./AdminNavbar";
 import AdminSidebar from "./AdminSidebar";
 import AdminMobileDrawer from "./AdminMobileDrawer";
 import { clearTokens } from "../../../lib/auth";
@@ -11,13 +10,17 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   const pageTitle = useMemo(() => {
-    if (pathname.startsWith("/admin/articles")) return "Articles";
-    if (pathname.startsWith("/admin/categories")) return "Categories";
-    if (pathname.startsWith("/admin/tags")) return "Tags";
+    if (pathname.startsWith("/admin/professors")) return "Dosen";
+    if (pathname.startsWith("/admin/articles")) return "Artikel";
+    if (pathname.startsWith("/admin/course")) return "Mata Kuliah";
     if (pathname === "/admin" || pathname.startsWith("/admin/dashboard"))
       return "Dashboard";
     return "Admin";
   }, [pathname]);
+
+  useEffect(() => {
+    document.title = `${pageTitle} - Admin`;
+  }, [pageTitle]);
 
   const handleLogout = () => {
     clearTokens();
@@ -26,30 +29,30 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar desktop */}
-      <AdminSidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} onLogout={handleLogout} />
-
+      <AdminSidebar
+        open={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        onLogout={handleLogout}
+      />
       <AdminMobileDrawer open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
       <div className="flex-1 flex flex-col transition-all duration-300">
-        <AdminNavbar
-          pageTitle={pageTitle}
-          onOpenSidebar={() => setSidebarOpen(true)}
-          onLogout={handleLogout}
-        />
-
         <main
-          className={`flex-1 py-6 md:py-8 px-4 sm:px-6 transition-all duration-300 ${
+          className={`flex-1 pt-20 md:pt-24 py-6 md:py-8 px-4 sm:px-6 transition-all duration-300 ${
             sidebarOpen ? "md:ml-64" : "md:ml-0"
           }`}
         >
-          <div className={`max-w-7xl mx-auto p-4 sm:p-6 ${pathname.startsWith("/admin/course/create") ? "bg-transparent border-none shadow-none rounded-none" : "bg-white border rounded-3xl shadow-soft"}`}>
-            <Outlet />
-          </div>
-
-          <footer className="mt-6 text-center text-xs text-slate-500">
-            © {new Date().getFullYear()} Artikel Admin • Institut Teknologi
-          </footer>
+          {pathname.startsWith("/admin/course/create") ||
+          pathname.startsWith("/admin/course/edit") ||
+          pathname.startsWith("/admin/professors/create") ||
+          pathname.startsWith("/admin/professors/edit") ? (
+            <div className="w-full max-w-4xl mx-auto px-4">
+              <Outlet />
+            </div>
+          ) : (
+            <div className="max-w-7xl mx-auto p-4 sm:p-6 bg-white border rounded-3xl shadow-soft">
+              <Outlet />
+            </div>
+          )}
         </main>
       </div>
     </div>
