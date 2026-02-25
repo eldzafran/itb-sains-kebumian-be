@@ -59,6 +59,7 @@ export async function createArticle(values: any) {
   form.append("slug", values.slug);
   form.append("content", values.content);
   form.append("status", values.status ?? "Draft");
+  form.append("created_by", values.created_by || "admin");
 
   const validFiles = values.files?.filter((f: any) => f.file_name && f.file_url) || [];
   form.append("files_json", JSON.stringify(validFiles));
@@ -82,6 +83,7 @@ export async function updateArticle(id: number, values: any) {
   form.append("slug", values.slug);
   form.append("content", values.content);
   form.append("status", values.status ?? "Draft");
+  form.append("created_by", values.created_by || "admin");
 
   const validFiles = values.files?.filter((f: any) => f.file_name && f.file_url) || [];
   form.append("files_json", JSON.stringify(validFiles));

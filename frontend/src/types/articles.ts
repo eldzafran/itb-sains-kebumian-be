@@ -16,6 +16,7 @@ export type ApiArticle = {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  created_by: string;
 };
 
 export type Props = {

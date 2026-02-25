@@ -29,6 +29,7 @@ class ArticleSerializer(serializers.ModelSerializer):
         many=True,
         queryset=ArticleCategory.objects.all()
     )
+    created_by = serializers.CharField(default="admin", allow_blank=True)
 
     class Meta:
         model = Article
@@ -75,9 +76,6 @@ class ArticleSerializer(serializers.ModelSerializer):
         categories = validated_data.pop('categories', [])
         
         files_data = self.context.get('files_from_json', [])
-
-        user = self.context['request'].user
-        validated_data['created_by'] = user
 
         article = Article.objects.create(**validated_data)
         article.categories.set(categories)

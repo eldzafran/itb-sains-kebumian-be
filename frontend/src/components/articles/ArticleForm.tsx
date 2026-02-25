@@ -38,6 +38,7 @@ export default function ArticleForm({
 
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [categoriesSelected, setCategoriesSelected] = useState<number[]>([]);
+  const [created_by, setCreated_by] = useState("");
 
   // Gunakan nama 'files' agar sinkron dengan Serializer Django kamu
   const [files, setFiles] = useState<{ file_name: string; file_url: string }[]>([]);
@@ -51,7 +52,8 @@ export default function ArticleForm({
       setSlug(initial.slug ?? "");
       setStatus(initial.status ?? "Draft");
       setThumbnailUrl(initial.thumbnail ?? "");
-      
+      setCreated_by(initial.created_by ?? "admin");
+
       const mappedCats = initial.categories?.map((c: any) => (typeof c === 'number' ? c : c.id)) ?? [];
       setCategoriesSelected(mappedCats);
       if (initial.files) setFiles(initial.files);
@@ -124,7 +126,9 @@ export default function ArticleForm({
       categories: categoriesSelected,
       thumbnailFile,
       published_at: publishedAt || null,
-      files: files, // Dikirim ke service sebagai 'files'
+      files: files, 
+      created_by,
+      
     } as any);
   }
 
