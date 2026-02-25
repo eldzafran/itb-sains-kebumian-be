@@ -12,27 +12,14 @@ export type ApiArticle = {
   thumbnail: string;
   status: "Draft" | "Published";
   categories: ApiCategory[];
+  files?: { file_name?: string; file_url?: string }[];
+  published_at: string | null;
   created_at: string;
   updated_at: string;
 };
 
 export type Props = {
-  initial?: {
-    id?: number;
-    title: string;
-    slug: string;
-    content: string;
-    thumbnail?: string;
-    categories?: number[];
-    status?: "Draft" | "Published";
-  } | null;
+  initial?: ApiArticle | any; 
   onCancel: () => void;
-  onSubmit: (values: {
-    title: string;
-    slug: string;
-    content: string;
-    status: "Draft" | "Published";
-    categories: number[];
-    thumbnailFile?: File | null;
-  }) => void;
+  onSubmit: (values: any) => void;
 };
