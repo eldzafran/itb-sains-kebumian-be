@@ -4,30 +4,12 @@ import { Link } from "react-router-dom";
 import {
   fetchArticles,
   fetchCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
 } from "../../../services/adminArticle";
-
 
 import ArticleCard from "../../../components/articles/ArticleCard";
 import CategoryModal from "../../../components/articles/CategoryModal";
 
 import type { ApiArticle, ApiCategory } from "../../../types/articles";
-
-function mapApiArticleToArticle(a: ApiArticle) {
-  return {
-    id: a.id,
-    title: a.title,
-    slug: a.slug,
-    category: a.categories?.[0]?.name ?? "Uncategorized",
-    updatedAt: a.updated_at,
-    excerpt: a.content.slice(0, 120) + "...",
-    content: a.content,
-    thumbnailUrl: a.thumbnail ?? "",
-    tags: [],
-  };
-}
 
 export default function AdminArticlesPage() {
   const [loading, setLoading] = useState(true);
@@ -37,18 +19,15 @@ export default function AdminArticlesPage() {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
 
-  const [newCategory, setNewCategory] = useState("");
-  const [editCategoryId, setEditCategoryId] = useState<number | null>(null);
-  const [editCategoryName, setEditCategoryName] = useState("");
 
   const [err, setErr] = useState("");
 
   async function load() {
     setErr("");
     setLoading(true);
-
     try {
       const articles = await fetchArticles();
+      // Pastikan data yang masuk ke state adalah data mentah dari API
       setItems(articles ?? []);
 
       const catRes = await fetchCategories();
@@ -64,42 +43,18 @@ export default function AdminArticlesPage() {
     load();
   }, []);
 
-  async function onDeleteCategory(id: number) {
-    if (!window.confirm("Hapus kategori ini?")) return;
-    await deleteCategory(id);
-    setCategories((prev) => prev.filter((c) => c.id !== id));
-  }
 
-  async function onAddCategory() {
-    if (!newCategory.trim()) return;
-    const res = await createCategory({ name: newCategory.trim(), slug: newCategory.trim().toLowerCase() });
-    setCategories((prev) => [...prev, res]);
-    setNewCategory("");
-  }
-
-  async function onUpdateCategory() {
-    if (!editCategoryId || !editCategoryName.trim()) return;
-
-    const res = await updateCategory(editCategoryId, { name: editCategoryName.trim(), slug: editCategoryName.trim().toLowerCase() });
-
-    setCategories((prev) =>
-      prev.map((c) => (c.id === editCategoryId ? res : c))
-    );
-
-    setEditCategoryId(null);
-    setEditCategoryName("");
-  }
-
+  // --- PERBAIKAN 2: LOGIKA FILTER ---
   const filteredItems = items.filter((a) => {
     const matchSearch = a.title.toLowerCase().includes(search.toLowerCase());
 
+    // Filter kategori mengecek ID di dalam array categories milik article
     const matchCategory =
       categoryFilter === null ||
       a.categories?.some((c) => c.id === categoryFilter);
 
     return matchSearch && matchCategory;
   });
-
 
   return (
     <div className="p-6">
@@ -151,7 +106,8 @@ export default function AdminArticlesPage() {
         </select>
       </div>
 
-      {/* CONTENT */}
+      {err && <div className="text-red-500 mb-4">{err}</div>}
+
       {loading ? (
         <div>Loading...</div>
       ) : filteredItems.length === 0 ? (
@@ -160,30 +116,23 @@ export default function AdminArticlesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredItems.map((a) => {
-            const mapped = mapApiArticleToArticle(a);
-
-            return (
-              <ArticleCard
-                key={a.id}
-                article={mapped}
-                onDelete={() =>
-                  setItems((prev) => prev.filter((x) => x.id !== a.id))
-                }
-              />
-            );
-          })}
+          {filteredItems.map((a) => (
+            <ArticleCard
+              key={a.id}
+              article={a} 
+              onDelete={(id) =>
+                setItems((prev) => prev.filter((x) => String(x.id) !== id))
+              }
+            />
+          ))}
         </div>
       )}
 
       {showCategoryModal && (
         <CategoryModal
-          categories={categories}
-          onAdd={onAddCategory}
-          onUpdate={onUpdateCategory}
-          onDelete={onDeleteCategory}
-          onClose={() => setShowCategoryModal(false)}
-        />
+          onCancel={() => setShowCategoryModal(false)} onSubmit={function (values: any): void {
+            throw new Error("Function not implemented.");
+          } }        />
       )}
     </div>
   );

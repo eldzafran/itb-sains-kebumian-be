@@ -20,7 +20,7 @@ export default function CreateArticlePage() {
         onCancel={() => nav("/admin/articles")}
         onSubmit={async (values) => {
           try {
-            await createArticle(values); // ✅ langsung kirim payload form
+            await createArticle(values);
 
             toast({
               type: "success",

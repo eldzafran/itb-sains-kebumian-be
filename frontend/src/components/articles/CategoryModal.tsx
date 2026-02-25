@@ -7,18 +7,21 @@ import {
   deleteCategory,
 } from "../../services/adminArticle";
 import { slugify } from "../../utils/slugify";
+import type { Props } from "../../types/articles";
+import { Trash2, Pencil } from "lucide-react";
+import ConfirmModal from "../ConfirmModal"; // Import ConfirmModal Anda
 
-interface Props {
-  onClose: () => void;
-}
-
-export default function CategoryModal({ onClose }: Props) {
+export default function CategoryModal({ onCancel }: Props) {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [search, setSearch] = useState("");
   const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // --- STATE UNTUK KONFIRMASI HAPUS ---
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{ id: number; name: string } | null>(null);
 
   async function load() {
     const data = await fetchCategories();
@@ -29,80 +32,88 @@ export default function CategoryModal({ onClose }: Props) {
     load();
   }, []);
 
-  /* ================= ADD ================= */
-
   async function handleAdd() {
     if (!newCategory.trim()) return;
 
     setLoading(true);
-    await createCategory({
-      name: newCategory,
-      slug: slugify(newCategory),
-    });
-    setNewCategory("");
-    await load();
-    setLoading(false);
+    try {
+      await createCategory({
+        name: newCategory,
+        slug: slugify(newCategory),
+      });
+      setNewCategory("");
+      await load();
+    } finally {
+      setLoading(false);
+    }
   }
-
-  /* ================= UPDATE ================= */
 
   async function handleUpdate(id: number) {
     if (!editName.trim()) return;
 
     setLoading(true);
-    await updateCategory(id, {
-      name: editName,
-      slug: slugify(editName),
-    });
-    setEditId(null);
-    await load();
-    setLoading(false);
+    try {
+      await updateCategory(id, {
+        name: editName,
+        slug: slugify(editName),
+      });
+      setEditId(null);
+      await load();
+    } finally {
+      setLoading(false);
+    }
   }
 
-  /* ================= DELETE ================= */
+  // --- LOGIK KONFIRMASI HAPUS ---
+  const triggerDelete = (id: number, name: string) => {
+    setCategoryToDelete({ id, name });
+    setIsDeleteModalOpen(true);
+  };
 
-  async function handleDelete(id: number) {
-    if (!confirm("Delete category?")) return;
+  async function handleConfirmDelete() {
+    if (!categoryToDelete) return;
 
     setLoading(true);
-    await deleteCategory(id);
-    await load();
-    setLoading(false);
+    try {
+      await deleteCategory(categoryToDelete.id);
+      await load();
+    } finally {
+      setLoading(false);
+      setIsDeleteModalOpen(false);
+      setCategoryToDelete(null);
+    }
   }
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[80vh] flex flex-col">
+      <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[80vh] flex flex-col relative">
         <h2 className="text-lg font-bold mb-4">Manage Categories</h2>
-
-        {/* Search */}
+        
         <input
           type="text"
           placeholder="Search categories..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border rounded-lg px-3 py-2 mb-4"
+          className="border rounded-lg px-3 py-2 mb-4 outline-none focus:border-blue-500"
         />
 
-        {/* Add */}
         <div className="flex gap-2 mb-4">
           <input
             type="text"
             placeholder="New category name"
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
-            className="border rounded-lg px-3 py-2 flex-1"
+            className="border rounded-lg px-3 py-2 flex-1 outline-none focus:border-blue-500"
           />
           <button
             disabled={loading}
             onClick={handleAdd}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
           >
             Add
           </button>
         </div>
 
-        {/* List */}
         <div className="flex-1 overflow-y-auto space-y-2 border rounded-lg p-3">
           {categories
             .filter((c) =>
@@ -111,13 +122,14 @@ export default function CategoryModal({ onClose }: Props) {
             .map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50"
+                className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition"
               >
                 {editId === c.id ? (
                   <input
+                    autoFocus
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="border rounded px-2 py-1 flex-1 mr-2"
+                    className="border rounded px-2 py-1 flex-1 mr-2 outline-none border-blue-400"
                   />
                 ) : (
                   <span className="font-medium">{c.name}</span>
@@ -128,13 +140,13 @@ export default function CategoryModal({ onClose }: Props) {
                     <>
                       <button
                         onClick={() => handleUpdate(c.id)}
-                        className="text-green-600"
+                        className="text-green-600 text-sm font-bold"
                       >
                         Save
                       </button>
                       <button
                         onClick={() => setEditId(null)}
-                        className="text-gray-600"
+                        className="text-gray-600 text-sm"
                       >
                         Cancel
                       </button>
@@ -146,15 +158,15 @@ export default function CategoryModal({ onClose }: Props) {
                           setEditId(c.id);
                           setEditName(c.name);
                         }}
-                        className="text-blue-600"
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                       >
-                        Edit
+                        <Pencil className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(c.id)}
-                        className="text-red-600"
+                        onClick={() => triggerDelete(c.id, c.name)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded"
                       >
-                        Delete
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </>
                   )}
@@ -165,13 +177,25 @@ export default function CategoryModal({ onClose }: Props) {
 
         <div className="mt-4 text-right">
           <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg border bg-gray-100 hover:bg-gray-200"
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg border bg-gray-100 hover:bg-gray-200 transition"
           >
             Close
           </button>
         </div>
       </div>
+
+      {/* --- MODAL KONFIRMASI --- */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        title="Hapus Kategori"
+        message={`Apakah Anda yakin ingin menghapus kategori "${categoryToDelete?.name}"? Tindakan ini mungkin mempengaruhi artikel yang menggunakan kategori ini.`}
+        onCancel={() => {
+          setIsDeleteModalOpen(false);
+          setCategoryToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

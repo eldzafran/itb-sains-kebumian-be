@@ -55,21 +55,19 @@ export async function getArticle(id: number): Promise<ApiArticle> {
 
 export async function createArticle(values: any) {
   const form = new FormData();
+  form.append("title", values.title);
+  form.append("slug", values.slug);
+  form.append("content", values.content);
+  form.append("status", values.status ?? "Draft");
+  form.append("created_by", values.created_by || "admin");
 
-  // ⚠️ Sesuaikan naming backend kamu
-  form.append("judul", values.title);
-  form.append("konten", values.content);
+  const validFiles = values.files?.filter((f: any) => f.file_name && f.file_url) || [];
+  form.append("files_json", JSON.stringify(validFiles));
 
-  if (values.categoryId) {
-    form.append("category_id", String(values.categoryId));
-  }
-
-  values.tagIds?.forEach((id: number) =>
-    form.append("tag_ids", String(id))
-  );
+  values.categories?.forEach((id: number) => form.append("categories", String(id)));
 
   if (values.thumbnailFile) {
-    form.append("images", values.thumbnailFile);
+    form.append("thumbnail", values.thumbnailFile);
   }
 
   return http("/api/articles/", {
@@ -78,37 +76,29 @@ export async function createArticle(values: any) {
   });
 }
 
-/* ===============================
-   UPDATE ARTICLE
-================================ */
 
 export async function updateArticle(id: number, values: any) {
   const form = new FormData();
+  form.append("title", values.title);
+  form.append("slug", values.slug);
+  form.append("content", values.content);
+  form.append("status", values.status ?? "Draft");
+  form.append("created_by", values.created_by || "admin");
 
-  form.append("judul", values.title);
-  form.append("konten", values.content);
+  const validFiles = values.files?.filter((f: any) => f.file_name && f.file_url) || [];
+  form.append("files_json", JSON.stringify(validFiles));
 
-  if (values.categoryId) {
-    form.append("category_id", String(values.categoryId));
-  }
-
-  values.tagIds?.forEach((id: number) =>
-    form.append("tag_ids", String(id))
-  );
+  values.categories?.forEach((id: number) => form.append("categories", String(id)));
 
   if (values.thumbnailFile) {
-    form.append("images", values.thumbnailFile);
+    form.append("thumbnail", values.thumbnailFile);
   }
 
   return http(`/api/articles/${id}/`, {
-    method: "PUT",
+    method: "PATCH", 
     body: form,
   });
 }
-
-/* ===============================
-   DELETE
-================================ */
 
 export async function deleteArticle(id: number) {
   return http(`/api/articles/${id}/`, {

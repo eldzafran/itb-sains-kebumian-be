@@ -1,45 +1,52 @@
 from rest_framework import serializers
-from .models import Course, Curriculum, LearningMethod, Assessment
-
-class CurriculumSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Curriculum
-        fields = "__all__"
+from .models import Course, LearningMethod, Assessment
 
 class LearningMethodSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearningMethod
-        fields = "__all__"
+        exclude = ['course'] 
 
 class AssessmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assessment
-        fields = "__all__"
+        exclude = ['course']
 
 class CourseSerializer(serializers.ModelSerializer):
-    # Relasi nested
-    curriculum_details = CurriculumSerializer(source='curriculum', read_only=True)
-    methods = LearningMethodSerializer(many=True, read_only=True)
-    assessments = AssessmentSerializer(many=True, read_only=True)
-    
-    # Menampilkan dosen pengampu
-    lecturers = serializers.SerializerMethodField()
 
+    methods = LearningMethodSerializer(many=True, required=False)
+    assessments = AssessmentSerializer(many=True, required=False)
+    
     class Meta:
         model = Course
-        fields = [
-            'id', 'curriculum', 'curriculum_details', 'program', 'study_option', 
-            'specialization', 'course_code', 'course_name', 'sks', 'description', 
-            'cpps', 'cpmk', 'weekly_plan', 'ethics_note', 'methods', 
-            'assessments', 'lecturers', 'created_at', 'updated_at'
-        ]
+        fields = "__all__"
 
-    def get_lecturers(self, obj):
-        return [
-            {
-                "id": lect.id,
-                "name": lect.name,
-                "nip": lect.nip,
-                "slug": lect.slug
-            } for lect in obj.lecturers.all()
-        ]
+    def create(self, validated_data):
+        methods_data = validated_data.pop('methods', [])
+        assessments_data = validated_data.pop('assessments', [])
+
+        course = Course.objects.create(**validated_data)
+        
+        for m in methods_data:
+            LearningMethod.objects.create(course=course, **m)
+        for a in assessments_data:
+            Assessment.objects.create(course=course, **a)
+            
+        return course
+
+    def update(self, instance, validated_data):
+        methods_data = validated_data.pop('methods', None)
+        assessments_data = validated_data.pop('assessments', None)
+
+        instance = super().update(instance, validated_data)
+
+        if methods_data is not None:
+            instance.methods.all().delete()
+            for m in methods_data:
+                LearningMethod.objects.create(course=instance, **m)
+
+        if assessments_data is not None:
+            instance.assessments.all().delete()
+            for a in assessments_data:
+                Assessment.objects.create(course=instance, **a)
+
+        return instance

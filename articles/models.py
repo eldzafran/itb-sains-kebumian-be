@@ -33,7 +33,7 @@ class Article(models.Model):
     categories = models.ManyToManyField(ArticleCategory, related_name='articles')
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Draft')
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_by = models.CharField(max_length=100, default='admin')
 
     published_at = models.DateTimeField(null=True, blank=True)
 

@@ -31,5 +31,7 @@ export async function http<T>(
     throw new Error(data?.detail || `Request gagal (${res.status})`);
   }
 
-  return data as T;
+  const finalData = data?.data !== undefined ? data.data : data;
+
+  return finalData as T;
 }
