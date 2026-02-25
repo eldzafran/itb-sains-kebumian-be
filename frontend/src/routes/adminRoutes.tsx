@@ -1,0 +1,62 @@
+import type { RouteObject } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
+
+import ProtectedRoutes from "./protectedRoutes";
+
+import AdminLayout from "../components/layouts/admin/AdminLayout";
+
+import AdminLoginPage from "../pages/admin/Login";
+import DashboardPage from "../pages/admin/Dashboard";
+import AdminArticlesPage from "../pages/admin/articles";
+import CreateArticlePage from "../pages/admin/articles/create";
+import EditArticlePage from "../pages/admin/articles/edit";
+import AdminProfessorsPage from "../pages/admin/professors";
+import CreateProfessorPage from "../pages/admin/professors/create";
+import EditProfessorPage from "../pages/admin/professors/edit";
+import AdminCoursesPage from "../pages/admin/course";
+import CreateCoursePage from "../pages/admin/course/create";
+import EditCoursePage from "../pages/admin/course/edit";
+import ArticleDetailPage from "../pages/admin/articles/detail";
+
+const adminRoutes: RouteObject[] = [
+  {
+    path: "/admin",
+    element: <Outlet />,
+    children: [
+      {
+        path: "login",
+        element: <AdminLoginPage />, // 🔥 HAPUS AdminAuthGate
+      },
+
+      {
+        element: (
+          <ProtectedRoutes>
+            <AdminLayout />
+          </ProtectedRoutes>
+        ),
+        children: [
+          { index: true, element: <Navigate to="dashboard" replace /> },
+
+          { path: "dashboard", element: <DashboardPage /> },
+
+          { path: "articles", element: <AdminArticlesPage /> },
+          { path: "articles/create", element: <CreateArticlePage /> },
+          { path: "articles/edit/:id", element: <EditArticlePage /> },
+          { path: "articles/:id", element: <ArticleDetailPage /> },
+
+          { path: "professors", element: <AdminProfessorsPage /> },
+          { path: "professors/create", element: <CreateProfessorPage /> },
+          { path: "professors/edit/:id", element: <EditProfessorPage /> },
+
+          { path: "course", element: <AdminCoursesPage /> },
+          { path: "course/create", element: <CreateCoursePage /> },
+          { path: "course/edit/:id", element: <EditCoursePage /> },
+
+          { path: "*", element: <Navigate to="dashboard" replace /> },
+        ],
+      },
+    ],
+  },
+];
+
+export default adminRoutes;
