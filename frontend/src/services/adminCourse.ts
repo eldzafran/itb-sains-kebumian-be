@@ -1,5 +1,5 @@
 import { http } from "../lib/http";
-import type { Course } from "../types/course";
+import type { Course, MetaDataType } from "../types/course";
 type GetCoursesParams = {
   page?: number;
   search?: string;
@@ -41,4 +41,8 @@ export async function deleteCourse(id: number): Promise<void> {
   return http(`/api/courses/${id}/`, {
     method: "DELETE",
   });
+}
+
+export async function getCourseMetadata(): Promise<MetaDataType> {
+    return http<MetaDataType>("/api/courses/metadata/");
 }

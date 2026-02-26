@@ -1,20 +1,45 @@
 from django.db import models
-
+from django.core.exceptions import ValidationError
 class Course(models.Model):
-    PROGRAM_CHOICES = (
-        ('S2 Magister', 'S2 Magister'),
-        ('S3 Doktoral', 'S3 Doktoral'),
-    )
-    program = models.CharField(max_length=20, choices=PROGRAM_CHOICES)
 
-    study_option = models.CharField(max_length=200, blank=True, null=True)
-    specialization = models.CharField(max_length=200, blank=True, null=True)
+    PROGRAM_CHOICES = (
+        ('S2', 'S2 Magister'),
+        ('S3', 'S3 Doktoral'),
+    )
+
+    STUDY_OPTION_CHOICES = (
+        ('ATMOSFER', 'Sains Atmosfer'),
+        ('OSEANOGRAFI', 'Oseanografi dan Interaksi Sistem Bumi'),
+        ('INTERAKSI', 'Interaksi Sistem Bumi'),
+        ('KEBUMIAN', 'Sains Kebumian'),
+    )
+
+    SPECIALIZATION_CHOICES = (
+        ('IKLIM', 'Perubahan Iklim dan Transisi Energi'),
+        ('BENCANA', 'Mitigasi Bencana Kebumian'),
+    )
+
+    program = models.CharField(
+        max_length=2,
+        choices=PROGRAM_CHOICES
+    )
+
+    study_option = models.CharField(
+        max_length=20,
+        choices=STUDY_OPTION_CHOICES
+    )
+
+    specialization = models.CharField(
+        max_length=20,
+        choices=SPECIALIZATION_CHOICES,
+        blank=True,
+        null=True,
+    )
 
     course_code = models.CharField(max_length=20, unique=True)
     course_name = models.CharField(max_length=200)
 
     sks = models.PositiveIntegerField()
-
     description = models.CharField(max_length=200)
 
     cpps = models.CharField(max_length=500, blank=True, null=True)
@@ -24,6 +49,17 @@ class Course(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        if self.program == 'S3' and self.specialization:
+            raise ValidationError({
+                'specialization': 'Spesialisasi hanya untuk Program S2.'
+            })
+
+        if self.study_option == 'KEBUMIAN' and self.program != 'S3':
+            raise ValidationError({
+                'study_option': 'Sains Kebumian hanya tersedia untuk Program S3.'
+            })
 
     def __str__(self):
         return self.course_name

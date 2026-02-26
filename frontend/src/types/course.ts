@@ -1,10 +1,11 @@
-export type CourseProgram = "S2 Magister" | "S3 Doktoral";
-
 export interface Course {
 	id?: number;
-	program: CourseProgram;
+	program: string;
+	program_display: string;
 	study_option?: string | null;
+	study_option_display?: string ;
 	specialization?: string | null;
+	specialization_display?: string;
 	course_code: string;
 	course_name: string;
 	sks: number;
@@ -34,3 +35,14 @@ export interface Assessment {
 	weight: number;
 	cpl: string;
 }
+
+export interface MetaDataType {
+	programs: choice[];
+	study_options: choice[];
+	specializations: choice[];
+}
+
+export type choice = {
+	value: string;
+	label: string;
+};

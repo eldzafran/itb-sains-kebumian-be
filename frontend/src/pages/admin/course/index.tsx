@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { getCourses, deleteCourse } from "../../../services/adminCourse";
 import type { Course } from "../../../types/course";
 import { SquarePen, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
-import ConfirmModal from "../../../components/ConfirmModal"; // Import modal kustom Anda
+import ConfirmModal from "../../../components/ConfirmModal";
 
 export default function AdminCoursesPage() {
   const [loading, setLoading] = useState(true);
@@ -15,7 +15,6 @@ export default function AdminCoursesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  // --- STATE UNTUK KONFIRMASI HAPUS ---
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<{ id: number | string; name: string } | null>(null);
 
@@ -39,16 +38,18 @@ export default function AdminCoursesPage() {
   }
 
   useEffect(() => {
-    load(1);
+    // Debounce sederhana agar tidak spam API saat mengetik
+    const delayDebounce = setTimeout(() => {
+      load(1);
+    }, 500);
+    return () => clearTimeout(delayDebounce);
   }, [search]);
 
-  // Fungsi untuk membuka modal konfirmasi
   function triggerDelete(id: number | string, name: string) {
     setSelectedCourse({ id, name });
     setIsDeleteModalOpen(true);
   }
 
-  // Fungsi eksekusi hapus setelah konfirmasi "Ya"
   async function handleConfirmDelete() {
     if (!selectedCourse) return;
     
@@ -108,20 +109,22 @@ export default function AdminCoursesPage() {
                     <th className="text-left p-4 font-semibold text-slate-700">Kode</th>
                     <th className="text-left p-4 font-semibold text-slate-700">Nama Mata Kuliah</th>
                     <th className="text-left p-4 font-semibold text-slate-700">SKS</th>
-                    <th className="text-left p-4 font-semibold text-slate-700">Program</th>
+                    {/* Header tetap sama */}
+                    <th className="text-left p-4 font-semibold text-slate-700">Program & Opsi</th>
                     <th className="text-right p-4 font-semibold text-slate-700">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {items.map((m) => (
+                  {items.map((m: any) => (
                     <tr key={m.id} className="hover:bg-slate-50 transition-colors">
                       <td className="p-4 font-mono text-blue-600 font-medium">{m.course_code}</td>
                       <td className="p-4 text-black font-medium">{m.course_name}</td>
                       <td className="p-4 text-slate-600">{m.sks} SKS</td>
                       <td className="p-4">
-                        <span className={`px-2 py-1 rounded text-xs font-bold ${m.program === 'S3 Doktoral' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                          {m.program}
-                        </span>
+                          {/* LOGIC DISPLAY PROGRAM */}
+                          <span className={`w-fit px-2 py-0.5 rounded text-[12px] font-bold ${m.program === 'S3' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                            {m.program_display || m.program}
+                          </span>
                       </td>
                       <td className="p-4 text-right space-x-1">
                         <Link to={`/admin/course/edit/${m.id}`} className="inline-flex items-center justify-center w-9 h-9 text-blue-600 hover:bg-blue-50 rounded-lg">
@@ -177,7 +180,6 @@ export default function AdminCoursesPage() {
         </>
       )}
 
-      {/* --- MODAL KONFIRMASI HAPUS --- */}
       <ConfirmModal
         isOpen={isDeleteModalOpen}
         title="Hapus Mata Kuliah"

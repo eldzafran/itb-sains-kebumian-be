@@ -40,7 +40,6 @@ export default function ArticleForm({
   const [categoriesSelected, setCategoriesSelected] = useState<number[]>([]);
   const [created_by, setCreated_by] = useState("");
 
-  // Gunakan nama 'files' agar sinkron dengan Serializer Django kamu
   const [files, setFiles] = useState<{ file_name: string; file_url: string }[]>([]);
 
   const field = "w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none";
